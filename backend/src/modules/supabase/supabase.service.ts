@@ -27,8 +27,8 @@ export class SupabaseService implements OnModuleInit {
    * Create a client with user's JWT for Row Level Security
    */
   getClientWithAuth(accessToken: string): SupabaseClient {
-    const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
-    const supabaseKey = this.configService.get<string>('SUPABASE_ANON_KEY');
+    const supabaseUrl = this.configService.get<string>('SUPABASE_URL')!;
+    const supabaseKey = this.configService.get<string>('SUPABASE_ANON_KEY')!;
 
     return createClient(supabaseUrl, supabaseKey, {
       global: {

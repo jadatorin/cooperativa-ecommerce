@@ -15,7 +15,7 @@ export class AuthService {
     const supabase = this.supabaseService.getClient();
 
     // Create user in Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    const { data: authData, error: authError } = await (supabase.auth as any).signUp({
       email: registerDto.email,
       password: registerDto.password,
       options: {
@@ -64,7 +64,7 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const supabase = this.supabaseService.getClient();
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await (supabase.auth as any).signInWithPassword({
       email: loginDto.email,
       password: loginDto.password,
     });
@@ -112,7 +112,7 @@ export class AuthService {
   async refreshToken(refreshToken: string) {
     const supabase = this.supabaseService.getClient();
 
-    const { data, error } = await supabase.auth.refreshSession({
+    const { data, error } = await (supabase.auth as any).refreshSession({
       refresh_token: refreshToken,
     });
 

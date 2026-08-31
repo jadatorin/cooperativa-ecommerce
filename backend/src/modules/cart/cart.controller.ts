@@ -24,14 +24,14 @@ export class CartController {
   @Get()
   @ApiOperation({ summary: 'Get user cart' })
   @ApiResponse({ status: 200, description: 'Cart with items' })
-  async getCart(@Request() req) {
+  async getCart(@Request() req: any) {
     return this.cartService.getCart(req.user.id);
   }
 
   @Post('items')
   @ApiOperation({ summary: 'Add item to cart' })
   @ApiResponse({ status: 201, description: 'Item added' })
-  async addItem(@Request() req, @Body() addToCartDto: AddToCartDto) {
+  async addItem(@Request() req: any, @Body() addToCartDto: AddToCartDto) {
     return this.cartService.addItem(req.user.id, addToCartDto);
   }
 
@@ -39,7 +39,7 @@ export class CartController {
   @ApiOperation({ summary: 'Update item quantity' })
   @ApiResponse({ status: 200, description: 'Item updated' })
   async updateItemQuantity(
-    @Request() req,
+    @Request() req: any,
     @Param('itemId') itemId: string,
     @Body('quantity') quantity: number,
   ) {
@@ -49,14 +49,14 @@ export class CartController {
   @Delete('items/:itemId')
   @ApiOperation({ summary: 'Remove item from cart' })
   @ApiResponse({ status: 200, description: 'Item removed' })
-  async removeItem(@Request() req, @Param('itemId') itemId: string) {
+  async removeItem(@Request() req: any, @Param('itemId') itemId: string) {
     return this.cartService.removeItem(req.user.id, itemId);
   }
 
   @Delete()
   @ApiOperation({ summary: 'Clear entire cart' })
   @ApiResponse({ status: 200, description: 'Cart cleared' })
-  async clearCart(@Request() req) {
+  async clearCart(@Request() req: any) {
     return this.cartService.clearCart(req.user.id);
   }
 }

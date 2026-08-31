@@ -23,7 +23,7 @@ export class OrdersController {
   @Post()
   @ApiOperation({ summary: 'Create order from cart' })
   @ApiResponse({ status: 201, description: 'Order created' })
-  async create(@Request() req, @Body() createOrderDto: CreateOrderDto) {
+  async create(@Request() req: any, @Body() createOrderDto: CreateOrderDto) {
     return this.ordersService.create(req.user.id, createOrderDto);
   }
 
@@ -31,7 +31,7 @@ export class OrdersController {
   @ApiOperation({ summary: 'Get user orders' })
   @ApiResponse({ status: 200, description: 'Orders list' })
   async findAll(
-    @Request() req,
+    @Request() req: any,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
@@ -42,7 +42,7 @@ export class OrdersController {
   @ApiOperation({ summary: 'Get order by ID' })
   @ApiResponse({ status: 200, description: 'Order details' })
   @ApiResponse({ status: 404, description: 'Order not found' })
-  async findOne(@Request() req, @Param('id') id: string) {
+  async findOne(@Request() req: any, @Param('id') id: string) {
     return this.ordersService.findOne(req.user.id, id);
   }
 }

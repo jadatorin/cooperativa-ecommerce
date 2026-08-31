@@ -21,21 +21,21 @@ export class FavoritesController {
   @Get()
   @ApiOperation({ summary: 'Get user favorites' })
   @ApiResponse({ status: 200, description: 'Favorites list' })
-  async findAll(@Request() req) {
+  async findAll(@Request() req: any) {
     return this.favoritesService.findAll(req.user.id);
   }
 
   @Post(':productId')
   @ApiOperation({ summary: 'Add product to favorites' })
   @ApiResponse({ status: 201, description: 'Product added' })
-  async add(@Request() req, @Param('productId') productId: string) {
+  async add(@Request() req: any, @Param('productId') productId: string) {
     return this.favoritesService.add(req.user.id, productId);
   }
 
   @Delete(':productId')
   @ApiOperation({ summary: 'Remove product from favorites' })
   @ApiResponse({ status: 200, description: 'Product removed' })
-  async remove(@Request() req, @Param('productId') productId: string) {
+  async remove(@Request() req: any, @Param('productId') productId: string) {
     return this.favoritesService.remove(req.user.id, productId);
   }
 }
