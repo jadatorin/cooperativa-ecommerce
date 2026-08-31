@@ -1,19 +1,19 @@
 # Cooperativa E-commerce
 
-E-commerce completo para cooperativa con backend NestJS y frontend Lit.
+E-commerce completo para cooperativa con backend Nest.js y frontend Next.js.
 
 ## Arquitectura
 
 ```
 ┌─────────────────────────────────────────────────┐
-│            Frontend (Lit + Vite)                 │
+│    Frontend (Next.js + Tailwind + shadcn/ui)    │             │
 │         Responsive, Offline-capable             │
 └──────────────────────┬──────────────────────────┘
                        │ HTTPS
                        ▼
 ┌─────────────────────────────────────────────────┐
 │            Backend (NestJS + Prisma)            │
-│    Auth │ Products │ Cart │ Orders │ Favorites   │
+│    Auth │ Products │ Cart │ Orders │ Favorites  │
 └──────────────────────┬──────────────────────────┘
                        │
                        ▼
@@ -25,7 +25,7 @@ E-commerce completo para cooperativa con backend NestJS y frontend Lit.
 
 ## Stack
 
-- **Frontend**: Lit 2.x + Vite 5.x
+- **Frontend**: Next.js + Tailwind + shadcn/ui
 - **Backend**: NestJS 10.x
 - **Database**: Supabase (PostgreSQL 16 managed)
 - **Auth**: Supabase Auth + JWT
