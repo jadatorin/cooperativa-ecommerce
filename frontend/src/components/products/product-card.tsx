@@ -13,18 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/utils";
-
-interface Product {
-  id: string;
-  name: string;
-  description?: string;
-  price: number;
-  image_url?: string;
-  category_slug?: string;
-  quantity_stock: number;
-  is_available: boolean;
-  weight_sold: boolean;
-}
+import { Product } from "@/types";
 
 interface ProductCardProps {
   product: Product;
@@ -43,8 +32,8 @@ export function ProductCard({ product }: ProductCardProps) {
               className="object-cover"
             />
           ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              Sin imagen
+            <div className="flex items-center justify-center h-full text-muted-foreground text-sm text-center p-4">
+              {product.name}
             </div>
           )}
           {product.weight_sold && (
