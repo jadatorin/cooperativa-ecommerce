@@ -19,7 +19,7 @@ export function SearchAutocomplete({ className = "", mobile = false }: SearchAut
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const router = useRouter();
 
   // Debounced search
