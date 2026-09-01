@@ -7,11 +7,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ArrowLeft, Package } from "lucide-react";
+import { ArrowLeft, Package, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { AddToCartButton } from "@/components/products/add-to-cart-button";
+import { Button } from "@/components/ui/button";
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -36,7 +37,30 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   try {
     product = await fetchProduct(id);
   } catch {
-    notFound();
+    return (
+      <div className="container mx-auto px-4 py-16">
+        <Link
+          href="/products"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Volver a productos
+        </Link>
+        <div className="flex flex-col items-center justify-center gap-4 py-16">
+          <AlertCircle className="h-16 w-16 text-destructive" />
+          <h1 className="text-2xl font-bold">Producto no encontrado</h1>
+          <p className="text-muted-foreground">
+            El producto que buscas no existe o no está disponible.
+          </p>
+          <Link href="/products">
+            <Button>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Ver productos
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (

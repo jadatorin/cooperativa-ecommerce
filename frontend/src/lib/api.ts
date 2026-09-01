@@ -1,4 +1,4 @@
-import { Product, Category, DollarRate, PaginatedResponse, Cart, CartItem, AuthResponse, UserProfile } from "@/types";
+import { Product, Category, DollarRate, PaginatedResponse, Cart, CartItem, AuthResponse, UserProfile, Pagination } from "@/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
@@ -116,6 +116,98 @@ export async function removeFromCart(token: string, itemId: string): Promise<voi
 
 export async function clearCart(token: string): Promise<void> {
   await fetchAPI("/cart", {
+    method: "DELETE",
+    headers: authHeaders(token),
+  });
+}
+
+// ── Orders ────────────────────────────────────────────────────────────────
+
+export interface OrderItem {
+  id: string;
+  product_id: string;
+  product_name?: string;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+}
+
+export interface Order {
+  id: string;
+  user_id: string;
+  total: number;
+  notes?: string;
+  status: string;
+  created_at: string;
+  order_number?: number;
+  items?: OrderItem[];
+}
+
+export interface OrderResponse {
+  message: string;
+  order: {
+    id: string;
+    order_number: number;
+    total: number;
+    status: string;
+  };
+}
+
+export async function createOrder(
+  token: string,
+  notes?: string
+): Promise<OrderResponse> {
+  return fetchAPI<OrderResponse>("/orders", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders(token) },
+    body: JSON.stringify({ notes }),
+  });
+}
+
+export async function fetchOrders(
+  token: string,
+  page?: number,
+  limit?: number
+): Promise<{ orders: Order[]; pagination: Pagination }> {
+  const searchParams = new URLSearchParams();
+  if (page) searchParams.set("page", String(page));
+  if (limit) searchParams.set("limit", String(limit));
+  const qs = searchParams.toString();
+  return fetchAPI(`/orders${qs ? `?${qs}` : ""}`, {
+    headers: authHeaders(token),
+  });
+}
+
+export async function fetchOrder(token: string, orderId: string): Promise<Order> {
+  return fetchAPI<Order>(`/orders/${orderId}`, {
+    headers: authHeaders(token),
+  });
+}
+
+// ── Favorites ────────────────────────────────────────────────────────────
+
+export interface Favorite {
+  id: string;
+  user_id: string;
+  product_id: string;
+  created_at: string;
+}
+
+export async function fetchFavorites(token: string): Promise<Favorite[]> {
+  return fetchAPI<Favorite[]>("/favorites", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function addFavorite(token: string, productId: string): Promise<{ message: string; favorite: Favorite }> {
+  return fetchAPI(`/favorites/${productId}`, {
+    method: "POST",
+    headers: authHeaders(token),
+  });
+}
+
+export async function removeFavorite(token: string, productId: string): Promise<{ message: string }> {
+  return fetchAPI(`/favorites/${productId}`, {
     method: "DELETE",
     headers: authHeaders(token),
   });

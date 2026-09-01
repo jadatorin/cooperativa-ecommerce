@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Trash2, Plus, Minus, ShoppingBag, Loader2 } from "lucide-react";
+import { Trash2, Plus, Minus, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,6 +16,8 @@ import { fetchCart, fetchProduct, updateCartItem, removeFromCart } from "@/lib/a
 import { useAuth } from "@/contexts/auth-context";
 import { useCart } from "@/contexts/cart-context";
 import { LoginForm } from "@/components/auth/login-form";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ErrorMessage } from "@/components/ui/error-message";
 import type { CartItem } from "@/types";
 
 export default function CartPage() {
@@ -126,9 +128,8 @@ export default function CartPage() {
   // ── Loading ─────────────────────────────────────────────────────────────
   if (authLoading || isLoading) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <Loader2 className="h-8 w-8 mx-auto mb-4 animate-spin text-muted-foreground" />
-        <p className="text-muted-foreground">Cargando carrito...</p>
+      <div className="container mx-auto px-4 py-16">
+        <LoadingSpinner size="md" text="Cargando carrito..." />
       </div>
     );
   }
@@ -152,9 +153,11 @@ export default function CartPage() {
   // ── Error ───────────────────────────────────────────────────────────────
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <p className="text-destructive mb-4">{error}</p>
-        <Button onClick={() => window.location.reload()}>Reintentar</Button>
+      <div className="container mx-auto px-4 py-16">
+        <ErrorMessage
+          message={error}
+          onRetry={() => window.location.reload()}
+        />
       </div>
     );
   }
@@ -265,9 +268,11 @@ export default function CartPage() {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-2">
-              <Button className="w-full" size="lg">
-                Proceder al pago
-              </Button>
+              <Link href="/checkout" className="w-full">
+                <Button className="w-full" size="lg" disabled={items.length === 0}>
+                  Proceder al pago
+                </Button>
+              </Link>
               <Link href="/products" className="w-full">
                 <Button variant="outline" className="w-full">
                   Seguir comprando

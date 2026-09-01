@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, Menu, X, User, LogOut, Package } from "lucide-react";
+import { ShoppingCart, Menu, X, User, LogOut, Package, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useRef, useEffect } from "react";
 import { useCart } from "@/contexts/cart-context";
@@ -91,6 +91,14 @@ export function Header() {
                       <Package className="h-4 w-4" />
                       Mis órdenes
                     </Link>
+                    <Link
+                      href="/favorites"
+                      className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <Heart className="h-4 w-4" />
+                      Favoritos
+                    </Link>
                     <button
                       className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent w-full text-left text-destructive"
                       onClick={() => {
@@ -164,6 +172,13 @@ export function Header() {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Mis órdenes
+                  </Link>
+                  <Link
+                    href="/favorites"
+                    className="text-sm font-medium hover:text-primary py-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Favoritos
                   </Link>
                   <button
                     className="text-sm font-medium text-destructive hover:text-destructive/80 py-2 text-left"
