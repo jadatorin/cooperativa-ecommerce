@@ -14,7 +14,7 @@ async function bootstrap() {
     'http://localhost:3002',
   ];
   if (process.env.FRONTEND_URL) {
-    allowedOrigins.push(process.env.FRONTEND_URL);
+    allowedOrigins.push(process.env.FRONTEND_URL.replace(/\/+$/, ''));
   }
 
   app.enableCors({
