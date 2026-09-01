@@ -14,12 +14,39 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/utils";
 import { Product } from "@/types";
+import { useAuth } from "@/contexts/auth-context";
+import { useCart } from "@/contexts/cart-context";
+import { addToCart } from "@/lib/api";
+import { useState } from "react";
 
 interface ProductCardProps {
   product: Product;
+  onAddedToCart?: () => void;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, onAddedToCart }: ProductCardProps) {
+  const { token, isAuthenticated } = useAuth();
+  const { refreshCart } = useCart();
+  const [adding, setAdding] = useState(false);
+
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent navigation to product detail
+    if (!isAuthenticated || !token) {
+      window.location.href = "/cart";
+      return;
+    }
+    setAdding(true);
+    try {
+      await addToCart(token, product.id, 1);
+      await refreshCart();
+      onAddedToCart?.();
+    } catch (err) {
+      console.error("Error adding to cart:", err);
+    } finally {
+      setAdding(false);
+    }
+  };
+
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       <Link href={`/products/${product.id}`}>
@@ -67,9 +94,13 @@ export function ProductCard({ product }: ProductCardProps) {
       </CardContent>
 
       <CardFooter>
-        <Button className="w-full" disabled={product.quantity_stock === 0}>
+        <Button
+          className="w-full"
+          disabled={product.quantity_stock === 0 || adding}
+          onClick={handleAddToCart}
+        >
           <ShoppingCart className="h-4 w-4 mr-2" />
-          Agregar al carrito
+          {adding ? "Agregando..." : "Agregar al carrito"}
         </Button>
       </CardFooter>
     </Card>

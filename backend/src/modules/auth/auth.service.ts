@@ -12,10 +12,13 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const supabase = this.supabaseService.getClient();
+    // Auth operations MUST use the anon key
+    const authClient = this.supabaseService.getAuthClient();
+    // Database operations use the service role key (bypasses RLS)
+    const dbClient = this.supabaseService.getClient();
 
     // Create user in Supabase Auth
-    const { data: authData, error: authError } = await (supabase.auth as any).signUp({
+    const { data: authData, error: authError } = await (authClient.auth as any).signUp({
       email: registerDto.email,
       password: registerDto.password,
       options: {
@@ -33,8 +36,8 @@ export class AuthService {
       throw new UnauthorizedException(authError.message);
     }
 
-    // Create user profile in our table
-    const { error: profileError } = await supabase
+    // Create user profile in our table (service role bypasses RLS)
+    const { error: profileError } = await dbClient
       .from('app_users')
       .insert({
         id: authData.user.id,
@@ -62,19 +65,23 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const supabase = this.supabaseService.getClient();
+    // Auth operations MUST use the anon key
+    const authClient = this.supabaseService.getAuthClient();
+    // Database operations use the service role key
+    const dbClient = this.supabaseService.getClient();
 
-    const { data, error } = await (supabase.auth as any).signInWithPassword({
+    const { data, error } = await (authClient.auth as any).signInWithPassword({
       email: loginDto.email,
       password: loginDto.password,
     });
 
     if (error) {
+      console.error('Login error:', error.message);
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Get user profile
-    const { data: profile } = await supabase
+    // Get user profile (service role bypasses RLS)
+    const { data: profile } = await dbClient
       .from('app_users')
       .select('*')
       .eq('id', data.user.id)
@@ -110,7 +117,7 @@ export class AuthService {
   }
 
   async refreshToken(refreshToken: string) {
-    const supabase = this.supabaseService.getClient();
+    const supabase = this.supabaseService.getAuthClient();
 
     const { data, error } = await (supabase.auth as any).refreshSession({
       refresh_token: refreshToken,

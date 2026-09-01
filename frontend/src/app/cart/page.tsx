@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Trash2, Plus, Minus, ShoppingBag } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Trash2, Plus, Minus, ShoppingBag, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,52 +12,155 @@ import {
 } from "@/components/ui/card";
 import { formatPrice } from "@/lib/utils";
 import Link from "next/link";
-
-interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  image_url?: string;
-}
-
-const initialCart: CartItem[] = [
-  {
-    id: "1",
-    name: "Arroz Polar 1kg",
-    price: 3.5,
-    quantity: 2,
-  },
-  {
-    id: "2",
-    name: "Leche Completa 1L",
-    price: 2.8,
-    quantity: 3,
-  },
-];
+import { fetchCart, fetchProduct, updateCartItem, removeFromCart } from "@/lib/api";
+import { useAuth } from "@/contexts/auth-context";
+import { useCart } from "@/contexts/cart-context";
+import { LoginForm } from "@/components/auth/login-form";
+import type { CartItem } from "@/types";
 
 export default function CartPage() {
-  const [cart, setCart] = useState<CartItem[]>(initialCart);
+  const { token, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { refreshCart } = useCart();
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [total, setTotal] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const updateQuantity = (id: string, delta: number) => {
-    setCart((prev) =>
-      prev
-        .map((item) =>
-          item.id === id
-            ? { ...item, quantity: Math.max(0, item.quantity + delta) }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
+  // Fetch cart and enrich items with product data
+  useEffect(() => {
+    if (authLoading) return;
+    if (!isAuthenticated || !token) {
+      setIsLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function load() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const cart = await fetchCart(token!);
+
+        // Enrich items with product name and image
+        const uniqueProductIds = [...new Set(cart.items.map((i) => i.product_id))];
+        const productMap = new Map<string, { name: string; image_url?: string }>();
+
+        await Promise.all(
+          uniqueProductIds.map(async (pid) => {
+            try {
+              const product = await fetchProduct(pid);
+              productMap.set(pid, { name: product.name, image_url: product.image_url });
+            } catch {
+              productMap.set(pid, { name: "Producto desconocido" });
+            }
+          })
+        );
+
+        if (cancelled) return;
+
+        const enriched = cart.items.map((item) => ({
+          ...item,
+          product_name: productMap.get(item.product_id)?.name ?? "Producto",
+          product_image: productMap.get(item.product_id)?.image_url,
+        }));
+
+        setItems(enriched);
+        setTotal(cart.total);
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Error al cargar el carrito");
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    load();
+    return () => { cancelled = true; };
+  }, [token, isAuthenticated, authLoading]);
+
+  const updateQuantity = useCallback(async (item: CartItem, delta: number) => {
+    const newQty = item.quantity + delta;
+    if (newQty <= 0) {
+      return removeItem(item);
+    }
+
+    // Optimistic update
+    setItems((prev) =>
+      prev.map((i) =>
+        i.id === item.id ? { ...i, quantity: newQty, subtotal: i.unit_price * newQty } : i
+      )
     );
-  };
+    setTotal((prev) => prev + item.unit_price * delta);
 
-  const removeItem = (id: string) => {
-    setCart((prev) => prev.filter((item) => item.id !== id));
-  };
+    try {
+      await updateCartItem(token!, item.id, newQty);
+      await refreshCart();
+    } catch {
+      // Revert on error
+      setItems((prev) =>
+        prev.map((i) =>
+          i.id === item.id ? { ...i, quantity: item.quantity, subtotal: item.subtotal } : i
+        )
+      );
+      setTotal((prev) => prev - item.unit_price * delta);
+    }
+  }, [token]);
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const removeItem = useCallback(async (item: CartItem) => {
+    // Optimistic update
+    setItems((prev) => prev.filter((i) => i.id !== item.id));
+    setTotal((prev) => prev - item.subtotal);
 
-  if (cart.length === 0) {
+    try {
+      await removeFromCart(token!, item.id);
+      await refreshCart();
+    } catch {
+      // Revert on error
+      setItems((prev) => [...prev, item]);
+      setTotal((prev) => prev + item.subtotal);
+    }
+  }, [token]);
+
+  // ── Loading ─────────────────────────────────────────────────────────────
+  if (authLoading || isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <Loader2 className="h-8 w-8 mx-auto mb-4 animate-spin text-muted-foreground" />
+        <p className="text-muted-foreground">Cargando carrito...</p>
+      </div>
+    );
+  }
+
+  // ── Not authenticated ───────────────────────────────────────────────────
+  if (!isAuthenticated) {
+    return (
+      <div className="container mx-auto px-4 py-16">
+        <div className="max-w-md mx-auto text-center">
+          <ShoppingBag className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+          <h1 className="text-2xl font-bold mb-2">Inicia sesión para ver tu carrito</h1>
+          <p className="text-muted-foreground mb-6">
+            Necesitas una cuenta para agregar productos
+          </p>
+          <LoginForm />
+        </div>
+      </div>
+    );
+  }
+
+  // ── Error ───────────────────────────────────────────────────────────────
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <p className="text-destructive mb-4">{error}</p>
+        <Button onClick={() => window.location.reload()}>Reintentar</Button>
+      </div>
+    );
+  }
+
+  // ── Empty cart ──────────────────────────────────────────────────────────
+  if (items.length === 0) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <ShoppingBag className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
@@ -72,6 +175,7 @@ export default function CartPage() {
     );
   }
 
+  // ── Cart with items ─────────────────────────────────────────────────────
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Carrito de compras</h1>
@@ -79,14 +183,21 @@ export default function CartPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Cart Items */}
         <div className="lg:col-span-2 space-y-4">
-          {cart.map((item) => (
+          {items.map((item) => (
             <Card key={item.id}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
+                  {item.product_image && (
+                    <img
+                      src={item.product_image}
+                      alt={item.product_name}
+                      className="h-16 w-16 rounded object-cover"
+                    />
+                  )}
                   <div className="flex-1">
-                    <h3 className="font-semibold">{item.name}</h3>
+                    <h3 className="font-semibold">{item.product_name}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {formatPrice(item.price)} c/u
+                      {formatPrice(item.unit_price)} c/u
                     </p>
                   </div>
 
@@ -95,7 +206,7 @@ export default function CartPage() {
                       variant="outline"
                       size="icon"
                       className="h-8 w-8"
-                      onClick={() => updateQuantity(item.id, -1)}
+                      onClick={() => updateQuantity(item, -1)}
                     >
                       <Minus className="h-4 w-4" />
                     </Button>
@@ -106,7 +217,7 @@ export default function CartPage() {
                       variant="outline"
                       size="icon"
                       className="h-8 w-8"
-                      onClick={() => updateQuantity(item.id, 1)}
+                      onClick={() => updateQuantity(item, 1)}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -114,13 +225,13 @@ export default function CartPage() {
 
                   <div className="text-right">
                     <p className="font-semibold">
-                      {formatPrice(item.price * item.quantity)}
+                      {formatPrice(item.unit_price * item.quantity)}
                     </p>
                     <Button
                       variant="ghost"
                       size="sm"
                       className="text-destructive"
-                      onClick={() => removeItem(item.id)}
+                      onClick={() => removeItem(item)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

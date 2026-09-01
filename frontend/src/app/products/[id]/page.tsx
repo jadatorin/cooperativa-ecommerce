@@ -1,17 +1,17 @@
 import { fetchProduct } from "@/lib/api";
 import { formatPrice } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ShoppingCart, ArrowLeft, Package } from "lucide-react";
+import { ArrowLeft, Package } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { AddToCartButton } from "@/components/products/add-to-cart-button";
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -118,16 +118,15 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           </Card>
 
           {/* Add to cart */}
-          <Button
-            size="lg"
-            className="w-full"
+          <AddToCartButton
+            productId={product.id}
             disabled={product.quantity_stock === 0}
-          >
-            <ShoppingCart className="h-5 w-5 mr-2" />
-            {product.quantity_stock > 0
-              ? "Agregar al carrito"
-              : "Agotado"}
-          </Button>
+            stockLabel={
+              product.quantity_stock > 0
+                ? `Disponible (${product.quantity_stock} unidades)`
+                : "Agotado"
+            }
+          />
         </div>
       </div>
     </div>

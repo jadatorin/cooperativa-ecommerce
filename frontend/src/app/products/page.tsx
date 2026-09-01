@@ -9,6 +9,7 @@ import { Product, Category } from "@/types";
 function ProductsContent() {
   const searchParams = useSearchParams();
   const activeCategory = searchParams.get("category") || "";
+  const searchQuery = searchParams.get("search") || "";
 
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -19,7 +20,11 @@ function ProductsContent() {
       setLoading(true);
       try {
         const [productsRes, categoriesRes] = await Promise.all([
-          fetchProducts({ category: activeCategory || undefined, limit: 50 }),
+          fetchProducts({
+            category: activeCategory || undefined,
+            search: searchQuery || undefined,
+            limit: 50,
+          }),
           fetchCategories(),
         ]);
         setProducts(productsRes.products);
@@ -32,11 +37,13 @@ function ProductsContent() {
       }
     }
     load();
-  }, [activeCategory]);
+  }, [activeCategory, searchQuery]);
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Productos</h1>
+      <h1 className="text-3xl font-bold mb-8">
+        {searchQuery ? `Resultados para "${searchQuery}"` : "Productos"}
+      </h1>
 
       {/* Filters */}
       <div className="mb-6 flex flex-wrap gap-2">

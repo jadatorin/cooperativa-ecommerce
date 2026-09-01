@@ -44,3 +44,41 @@ export interface PaginatedResponse<T> {
   products: T[];
   pagination: Pagination;
 }
+
+export interface CartItem {
+  id: string;
+  cart_id: string;
+  product_id: string;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+  created_at?: string;
+  // Enriched from product data
+  product_name?: string;
+  product_image?: string;
+}
+
+export interface Cart {
+  id: string;
+  items: CartItem[];
+  total: number;
+  itemCount: number;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  full_name?: string;
+  phone?: string;
+  role: string;
+}
+
+export interface AuthResponse {
+  user: {
+    id: string;
+    email: string;
+    fullName?: string;
+    role?: string;
+  };
+  token: string;
+}
