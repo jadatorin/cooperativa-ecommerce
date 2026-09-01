@@ -1,6 +1,6 @@
 import { Product, Category, DollarRate, PaginatedResponse, Cart, CartItem, AuthResponse, UserProfile, Pagination } from "@/types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000").replace(/\/+$/, "");
 
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}/api${endpoint}`, {
