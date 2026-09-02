@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { SupabaseService } from '../supabase/supabase.service';
 import { RegisterDto } from './dto/register.dto';
@@ -6,6 +6,8 @@ import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private supabaseService: SupabaseService,
     private jwtService: JwtService,
@@ -48,7 +50,7 @@ export class AuthService {
       });
 
     if (profileError) {
-      console.error('Profile creation error:', profileError);
+      this.logger.error(`Profile creation error: ${profileError.message}`, profileError.stack);
     }
 
     // Generate JWT
@@ -76,7 +78,7 @@ export class AuthService {
     });
 
     if (error) {
-      console.error('Login error:', error.message);
+      this.logger.error(`Login error: ${error.message}`, error.stack);
       throw new UnauthorizedException('Invalid credentials');
     }
 

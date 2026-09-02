@@ -97,6 +97,7 @@ export function ProductCard({ product, onAddedToCart, onFavoriteToggle }: Produc
               alt={product.name}
               fill
               className="object-cover"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground text-sm text-center p-4">

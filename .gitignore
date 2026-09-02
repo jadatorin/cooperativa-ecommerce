@@ -39,3 +39,7 @@ coverage/
 
 # Supabase
 .supabase/
+
+# Build info
+tsconfig.tsbuildinfo
+*.log
