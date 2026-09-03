@@ -4,7 +4,7 @@ describe('CacheService', () => {
   let service: CacheService;
 
   beforeEach(() => {
-    service = new CacheService();
+    service = new CacheService(null);
   });
 
   it('should be defined', () => {
@@ -12,73 +12,79 @@ describe('CacheService', () => {
   });
 
   describe('get', () => {
-    it('should return null for non-existent key', () => {
-      const result = service.get('nonexistent');
+    it('should return null for non-existent key', async () => {
+      const result = await service.get('nonexistent');
       expect(result).toBeNull();
     });
 
-    it('should return cached value for existing key', () => {
-      service.set('test-key', 'test-value');
-      const result = service.get('test-key');
+    it('should return cached value for existing key', async () => {
+      await service.set('test-key', 'test-value');
+      const result = await service.get('test-key');
       expect(result).toBe('test-value');
     });
 
-    it('should return null for expired entry', () => {
-      service.set('test-key', 'test-value', 1); // 1ms TTL
-      // Wait for expiration
+    it('should return null for expired entry', async () => {
+      await service.set('test-key', 'test-value', 1);
       const start = Date.now();
       while (Date.now() - start < 10) {
         // busy wait
       }
-      const result = service.get('test-key');
+      const result = await service.get('test-key');
       expect(result).toBeNull();
     });
 
-    it('should return complex objects', () => {
+    it('should return complex objects', async () => {
       const complexObj = { name: 'test', nested: { value: 123 } };
-      service.set('complex', complexObj);
-      const result = service.get('complex');
+      await service.set('complex', complexObj);
+      const result = await service.get('complex');
       expect(result).toEqual(complexObj);
     });
   });
 
   describe('set', () => {
-    it('should store a value', () => {
-      service.set('key', 'value');
-      expect(service.get('key')).toBe('value');
+    it('should store a value', async () => {
+      await service.set('key', 'value');
+      expect(await service.get('key')).toBe('value');
     });
 
-    it('should overwrite existing value', () => {
-      service.set('key', 'value1');
-      service.set('key', 'value2');
-      expect(service.get('key')).toBe('value2');
+    it('should overwrite existing value', async () => {
+      await service.set('key', 'value1');
+      await service.set('key', 'value2');
+      expect(await service.get('key')).toBe('value2');
     });
 
-    it('should use custom TTL', () => {
-      service.set('key', 'value', 1000);
-      expect(service.get('key')).toBe('value');
+    it('should use custom TTL', async () => {
+      await service.set('key', 'value', 1000);
+      expect(await service.get('key')).toBe('value');
     });
   });
 
   describe('delete', () => {
-    it('should remove a cached entry', () => {
-      service.set('key', 'value');
-      service.delete('key');
-      expect(service.get('key')).toBeNull();
+    it('should remove a cached entry', async () => {
+      await service.set('key', 'value');
+      await service.delete('key');
+      expect(await service.get('key')).toBeNull();
     });
 
-    it('should not throw when deleting non-existent key', () => {
-      expect(() => service.delete('nonexistent')).not.toThrow();
+    it('should not throw when deleting non-existent key', async () => {
+      await expect(service.delete('nonexistent')).resolves.not.toThrow();
     });
   });
 
   describe('clear', () => {
-    it('should remove all cached entries', () => {
-      service.set('key1', 'value1');
-      service.set('key2', 'value2');
-      service.clear();
-      expect(service.get('key1')).toBeNull();
-      expect(service.get('key2')).toBeNull();
+    it('should remove all cached entries', async () => {
+      await service.set('key1', 'value1');
+      await service.set('key2', 'value2');
+      await service.clear();
+      expect(await service.get('key1')).toBeNull();
+      expect(await service.get('key2')).toBeNull();
+    });
+  });
+
+  describe('ping', () => {
+    it('should return connected for in-memory fallback', async () => {
+      const result = await service.ping();
+      expect(result).toBe('connected');
     });
   });
 });
