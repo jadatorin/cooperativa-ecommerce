@@ -1,143 +1,208 @@
 # Cooperativa E-commerce
 
-E-commerce completo para cooperativa con backend Nest.js y frontend Next.js.
+E-commerce completo para Cooperativa 5 de Julio con NestJS y Next.js.
 
-## Arquitectura
+## 🏗️ Arquitectura
 
-```
-┌─────────────────────────────────────────────────┐
-│    Frontend (Next.js + Tailwind + shadcn/ui)    │             │
-│         Responsive, Offline-capable             │
-└──────────────────────┬──────────────────────────┘
-                       │ HTTPS
-                       ▼
-┌─────────────────────────────────────────────────┐
-│            Backend (NestJS + Prisma)            │
-│    Auth │ Products │ Cart │ Orders │ Favorites  │
-└──────────────────────┬──────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────┐
-│         Supabase (PostgreSQL 16)                │
-│    Auth │ DB │ Realtime │ Storage │ Edge Fn     │
-└─────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    Frontend[Frontend (Next.js 16 + Tailwind v4 + shadcn/ui)]
+    Backend[Backend (NestJS 10 + Supabase)]
+    Redis[Redis Cache]
+    Monitoring[Monitoring & Metrics]
+    DB[(PostgreSQL 16 via Supabase)]
+
+    Frontend -->|HTTPS| Backend
+    Backend -->|Queries| DB
+    Backend -->|Cache| Redis
+    Backend -->|Metrics| Monitoring
 ```
 
-## Stack
+- **Frontend**: Next.js 16 + Tailwind v4 + shadcn/ui • Lazy loading • Bundle analyzer
+- **Backend**: NestJS 10 • Redis • Monitoring • 16 DB indexes
+- **Database**: Supabase (PostgreSQL 16) • Realtime • Storage
+- **Cache**: Redis (con fallback in-memory)
 
-- **Frontend**: Next.js + Tailwind + shadcn/ui
-- **Backend**: NestJS 10.x
-- **Database**: Supabase (PostgreSQL 16 managed)
-- **Auth**: Supabase Auth + JWT
-- **API Docs**: Swagger
+## ⚡ Performance
 
-## Quick Start
+| Métrica | Estado |
+|---|---|
+| Bundle inicial | ~941 KB (Next.js 16 + React 19) |
+| Lazy loading | 7 páginas optimizadas |
+| Índices DB | 16 índices creados |
+| Endpoints | Monitoreados con `/api/health` |
 
-### 1. Backend Setup
+### Scripts disponibles
 
 ```bash
+# Development
+cd backend; npm run start:dev    # API en http://localhost:3000
+cd frontend; npm run dev        # Frontend en http://localhost:5173
+
+# Performance
+cd frontend; npm run analyze    # Análisis de bundle (abre en navegador)
+
+# Tests
+cd backend; npm run test        # Jest tests
+cd frontend; npm run test       # Vitest tests
+```
+
+## 🐋 Con Docker (recomendado para producción)
+
+```bash
+# 1. Levantar Redis + Backend + Frontend
+docker compose up -d
+
+# 2. O configurar Redis manualmente
+docker run -d --name redis -p 6379:6379 redis:7-alpine
+```
+
+### Backend con Redis
+
+```bash
+# 1. Copiar variables de entorno
 cd backend
 cp .env.example .env
-# Edit .env with your Supabase credentials
+
+# 2. Agregar Redis (opcional - funciona sin él)
+REDIS_URL=redis://localhost:6379
+
+# 3. Instalar y correr
 npm install
 npm run start:dev
 ```
 
-Backend runs on: `http://localhost:3000`
-Swagger docs: `http://localhost:3000/api/docs`
+## 🛠️ Stack Tecnológico
 
-### 2. Database Setup
+| Capa | Tecnologías |
+|---|---|
+| **Frontend** | Next.js 16, React 19, Tailwind v4, shadcn/ui |
+| **Backend** | NestJS 10, TypeScript, ioredis |
+| **Database** | Supabase (PostgreSQL 16) |
+| **Cache** | Redis (opcional, fallback in-memory) |
+| **Testing** | Vitest + React Testing Library (frontend) • Jest + Supertest (backend) |
 
-1. Go to your Supabase dashboard
-2. Go to SQL Editor
-3. Run the contents of `docs/schema.sql`
+## 📡 Endpoints Principales
 
-### 3. Frontend Setup (coming soon)
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Frontend runs on: `http://localhost:5173`
-
-## API Endpoints
-
-### Auth
-- `POST /api/auth/register` - Register new user
+### Autenticación
+- `POST /api/auth/register` - Register
 - `POST /api/auth/login` - Login
-- `GET /api/auth/profile` - Get profile (auth required)
+- `GET /api/auth/profile` - Perfil (auth requerido)
 - `POST /api/auth/refresh` - Refresh token
 
-### Products
-- `GET /api/products` - List products (paginated, filterable)
-- `GET /api/products/:id` - Get product by ID
-- `GET /api/products/barcode/:barcode` - Get product by barcode
-- `POST /api/products` - Create product (admin)
-- `PUT /api/products/:id` - Update product (admin)
-- `DELETE /api/products/:id` - Delete product (superadmin)
+### Productos
+- `GET /api/products` - Listado (paginado, filtrable)
+- `GET /api/products/:id` - Por ID
+- `GET /api/products/barcode/:barcode` - Por código
+- `POST /api/products` - Crear (admin)
+- `PUT /api/products/:id` - Actualizar (admin)
+- `DELETE /api/products/:id` - Eliminar (superadmin)
 
-### Categories
-- `GET /api/categories` - List categories
-- `GET /api/categories/:slug` - Get category by slug
+### Carrito (auth)
+- `GET /api/cart` - Obtener carrito
+- `POST /api/cart/items` - Agregar ítem
+- `DELETE /api/cart` - Vaciar carrito
 
-### Cart (auth required)
-- `GET /api/cart` - Get cart
-- `POST /api/cart/items` - Add item
-- `PUT /api/cart/items/:itemId` - Update quantity
-- `DELETE /api/cart/items/:itemId` - Remove item
-- `DELETE /api/cart` - Clear cart
+### Órdenes (auth)
+- `POST /api/orders` - Crear pedido
+- `GET /api/orders` - Mis órdenes
+- `GET /api/orders/:id` - Detalle
 
-### Orders (auth required)
-- `POST /api/orders` - Create order from cart
-- `GET /api/orders` - List user orders
-- `GET /api/orders/:id` - Get order details
+### Favoritos (auth)
+- `GET /api/favorites` - Lista
+- `POST /api/favorites/:productId` - Agregar
+- `DELETE /api/favorites/:productId` - Remover
 
-### Favorites (auth required)
-- `GET /api/favorites` - List favorites
-- `POST /api/favorites/:productId` - Add to favorites
-- `DELETE /api/favorites/:productId` - Remove from favorites
+### Tasa de Dólar
+- `GET /api/dollar-rate` - Tasa actual
+- `GET /api/dollar-rate/history` - Histórico
+- `POST /api/dollar-rate` - Actualizar (admin)
 
-### Dollar Rate
-- `GET /api/dollar-rate` - Get current rate
-- `GET /api/dollar-rate/history` - Get rate history
-- `POST /api/dollar-rate` - Update rate (admin)
+### Health Check
+- `GET /api/health` - Status completo (cache, métricas)
 
-## Project Structure
+## 📦 Variables de Entorno
 
-```
-cooperativa-ecommerce/
-├── backend/
-│   ├── src/
-│   │   ├── modules/
-│   │   │   ├── auth/
-│   │   │   ├── products/
-│   │   │   ├── categories/
-│   │   │   ├── cart/
-│   │   │   ├── orders/
-│   │   │   ├── favorites/
-│   │   │   ├── dollar-rate/
-│   │   │   └── supabase/
-│   │   ├── common/
-│   │   │   ├── decorators/
-│   │   │   ├── enums/
-│   │   │   └── guards/
-│   │   ├── app.module.ts
-│   │   └── main.ts
-│   ├── .env.example
-│   ├── package.json
-│   └── tsconfig.json
-├── frontend/ (coming soon)
-├── docs/
-│   └── schema.sql
-└── README.md
+### Backend (`backend/.env.example`)
+
+```env
+# Base
+NODE_ENV=development
+PORT=3000
+API_URL=http://localhost:3000
+
+# Supabase
+VITE_SUPABASE_URL=https://vrhgqiyamkipgatzvvjw.supabase.co
+VITE_SUPABASE_ANON_KEY=tu_anon_key_aquí
+SUPABASE_SERVICE_ROLE_KEY=tu_service_role_key_aquí
+
+# Redis (opcional - funciona sin él)
+REDIS_URL=redis://localhost:6379
+
+# JWT
+JWT_SECRET=tu_secreto_aqui_cambiar_produccion
+JWT_EXPIRES_IN=15m
 ```
 
-## Environment Variables
+### Frontend (`frontend/.env.local`)
 
-See `backend/.env.example` for required configuration.
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3000
+NEXT_PUBLIC_SUPABASE_URL=https://vrhgqiyamkipgatzvvjw.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_anon_key_aquí
+```
 
-## License
+## 🚀 Despliegue
+
+| Entorno | Backend | Frontend |
+|---|---|---|
+| **Desarrollo** | `localhost:3000` | `localhost:5173` |
+| **Producción** | Render (`coop-backend-9d7x`) | Vercel (`cooperativa-ecommerce`) |
+| **Cache** | Redis (managed o Docker) | — |
+
+## 🧪 Testing
+
+### Backend
+
+```bash
+# Todas las pruebas
+cd backend; npm test
+
+# Ver cobertura
+cd backend; npm run test:cov
+```
+
+### Frontend
+
+```bash
+# Todas las pruebas
+cd frontend; npm run test
+
+# Con cobertura
+cd frontend; npm run test:cov
+```
+
+## 📚 Scripts SDD (Spec-Driven Development)
+
+```bash
+# Flujo completo: propose → spec → design → tasks
+# Ya implementado en la rama master
+
+# Índices de base de datos
+cd backend; npm run db:generate  # (personalizar según setup)
+```
+
+## 📄 Licencia
 
 ISC
+
+---
+
+### 🆕 Novedades en esta versión
+
+- ✅ **Redis cache** con fallback in-memory
+- ✅ **Monitoring** en `/api/health` (métricas de tiempo de respuesta)
+- ✅ **16 índices de base de datos** para queries optimizadas
+- ✅ **Lazy loading** en 7 páginas del frontend
+- ✅ **Bundle analyzer** configurado (`npm run analyze`)
+- ✅ Health check completo con status de cache y métricas
