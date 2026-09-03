@@ -54,6 +54,60 @@ export class CartService {
     };
   }
 
+  /**
+   * Get cart with product details enriched via a single batched query.
+   * Eliminates N+1 queries: instead of one query per cart item,
+   * collects all product IDs and fetches them in a single Supabase `in` query.
+   */
+  async getEnrichedCart(userId: string) {
+    const cart = await this.getOrCreateCart(userId);
+    const supabase = this.supabaseService.getClient();
+
+    const { data: items } = await supabase
+      .from('app_cart_items')
+      .select('*')
+      .eq('cart_id', cart.id)
+      .order('created_at', { ascending: true });
+
+    if (!items || items.length === 0) {
+      return {
+        id: cart.id,
+        items: [],
+        total: 0,
+        itemCount: 0,
+      };
+    }
+
+    // Batch: collect unique product IDs and fetch all in one query
+    const productIds = [...new Set(items.map((item) => item.product_id))];
+
+    const { data: products } = await supabase
+      .from('app_products')
+      .select('*')
+      .in('id', productIds);
+
+    // Build a lookup map for O(1) access
+    const productMap = new Map<string, any>();
+    for (const product of products || []) {
+      productMap.set(product.id, product);
+    }
+
+    // Enrich cart items with product details (gracefully handle missing products)
+    const enrichedItems = items.map((item) => ({
+      ...item,
+      product: productMap.get(item.product_id) || null,
+    }));
+
+    const total = items.reduce((sum, item) => sum + item.subtotal, 0);
+
+    return {
+      id: cart.id,
+      items: enrichedItems,
+      total,
+      itemCount: items.length,
+    };
+  }
+
   async addItem(userId: string, addToCartDto: AddToCartDto) {
     const cart = await this.getOrCreateCart(userId);
     const product = await this.productsService.findOne(addToCartDto.productId);

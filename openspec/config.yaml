@@ -1,0 +1,36 @@
+schema: spec-driven
+
+context: |
+  Tech stack: NestJS 10 + Supabase (PostgreSQL 16) backend, Next.js 16 + React 19 + Tailwind v4 + shadcn/ui frontend
+  Architecture: Monorepo with backend/ and frontend/ directories, NestJS modular architecture, Next.js App Router
+  Testing: Backend Jest 29.7.0 with unit tests (8 specs), no frontend tests
+  Style: TypeScript strict mode, ESLint, Prettier (backend only), shadcn/ui base-nova style
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Consider both backend and frontend impact
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+    - Separate backend and frontend design concerns
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
+    - Tag tasks with backend/frontend scope
+  apply:
+    guidelines:
+      - Follow existing code patterns
+      - Backend: NestJS module conventions
+      - Frontend: Next.js App Router + shadcn/ui patterns
+    tdd: true
+    test_command: "npm run test"
+  verify:
+    test_command: "npm run test"
+    build_command: "npm run build"
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas

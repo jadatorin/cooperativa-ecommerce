@@ -1,10 +1,24 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const logger = new Logger('Bootstrap');
+
+  // Response compression (behind env flag)
+  if (process.env.ENABLE_COMPRESSION === 'true') {
+    const compression = await import('compression');
+    app.use(compression.default());
+    logger.log('Response compression enabled');
+  }
+
+  // Rate limiting is configured via ThrottlerModule.forRoot() in AppModule.
+  // The ThrottlerGuard is registered as APP_GUARD in AppModule providers.
+  if (process.env.ENABLE_RATE_LIMIT === 'true') {
+    logger.log('Rate limiting enabled (100 req/min)');
+  }
 
   // CORS
   const allowedOrigins = [
@@ -46,7 +60,7 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
-  console.log(`🚀 Server running on http://localhost:${port}`);
-  console.log(`📚 Swagger docs: http://localhost:${port}/api/docs`);
+  logger.log(`Server running on http://localhost:${port}`);
+  logger.log(`Swagger docs: http://localhost:${port}/api/docs`);
 }
 bootstrap();
