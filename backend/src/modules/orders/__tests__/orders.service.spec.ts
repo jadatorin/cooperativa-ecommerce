@@ -33,6 +33,15 @@ describe('OrdersService', () => {
     status: 'pending',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+    items: [
+      {
+        id: 'item-123',
+        product_id: 'product-123',
+        quantity: 2,
+        unit_price: 2.50,
+        subtotal: 5.00,
+      },
+    ],
   };
 
   const mockSupabaseClient = {
@@ -162,7 +171,7 @@ describe('OrdersService', () => {
         count: 0,
       });
 
-      await service.findAll('user-123');
+      const result = await service.findAll('user-123');
 
       expect(result.pagination.page).toBe(1);
       expect(result.pagination.limit).toBe(10);

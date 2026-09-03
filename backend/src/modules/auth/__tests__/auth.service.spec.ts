@@ -27,12 +27,14 @@ describe('AuthService', () => {
   };
 
   beforeEach(async () => {
+    const mockAuth = {
+      signUp: jest.fn(),
+      signInWithPassword: jest.fn(),
+      refreshSession: jest.fn(),
+    };
+
     const mockSupabaseClient = {
-      auth: {
-        signUp: jest.fn(),
-        signInWithPassword: jest.fn(),
-        refreshSession: jest.fn(),
-      },
+      auth: mockAuth,
       from: jest.fn().mockReturnThis(),
       insert: jest.fn().mockReturnThis(),
       select: jest.fn().mockReturnThis(),
@@ -42,7 +44,7 @@ describe('AuthService', () => {
 
     supabaseService = {
       getClient: jest.fn().mockReturnValue(mockSupabaseClient),
-      getAuthClient: jest.fn().mockReturnValue(mockSupabaseClient),
+      getAuthClient: jest.fn().mockReturnValue({ auth: mockAuth }),
     } as any;
 
     jwtService = {
@@ -73,8 +75,8 @@ describe('AuthService', () => {
         phone: '+58 412 1234567',
       };
 
-      const authClient = supabaseService.getAuthClient();
-      (authClient.auth.signUp as jest.Mock).mockResolvedValue({
+      const authClient = supabaseService.getAuthClient() as any;
+      authClient.auth.signUp.mockResolvedValue({
         data: { user: mockUser },
         error: null,
       });
@@ -99,8 +101,8 @@ describe('AuthService', () => {
         fullName: 'Test User',
       };
 
-      const authClient = supabaseService.getAuthClient();
-      (authClient.auth.signUp as jest.Mock).mockResolvedValue({
+      const authClient = supabaseService.getAuthClient() as any;
+      authClient.auth.signUp.mockResolvedValue({
         data: { user: null },
         error: { message: 'User already registered' },
       });
@@ -115,8 +117,8 @@ describe('AuthService', () => {
         fullName: 'Test User',
       };
 
-      const authClient = supabaseService.getAuthClient();
-      (authClient.auth.signUp as jest.Mock).mockResolvedValue({
+      const authClient = supabaseService.getAuthClient() as any;
+      authClient.auth.signUp.mockResolvedValue({
         data: { user: null },
         error: { message: 'Password should be at least 6 characters' },
       });
@@ -132,8 +134,8 @@ describe('AuthService', () => {
         password: 'Password123!',
       };
 
-      const authClient = supabaseService.getAuthClient();
-      (authClient.auth.signInWithPassword as jest.Mock).mockResolvedValue({
+      const authClient = supabaseService.getAuthClient() as any;
+      authClient.auth.signInWithPassword.mockResolvedValue({
         data: { user: mockUser },
         error: null,
       });
@@ -158,8 +160,8 @@ describe('AuthService', () => {
         password: 'wrong-password',
       };
 
-      const authClient = supabaseService.getAuthClient();
-      (authClient.auth.signInWithPassword as jest.Mock).mockResolvedValue({
+      const authClient = supabaseService.getAuthClient() as any;
+      authClient.auth.signInWithPassword.mockResolvedValue({
         data: { user: null },
         error: { message: 'Invalid login credentials' },
       });
@@ -196,8 +198,8 @@ describe('AuthService', () => {
 
   describe('refreshToken', () => {
     it('should refresh token successfully', async () => {
-      const authClient = supabaseService.getAuthClient();
-      (authClient.auth.refreshSession as jest.Mock).mockResolvedValue({
+      const authClient = supabaseService.getAuthClient() as any;
+      authClient.auth.refreshSession.mockResolvedValue({
         data: { user: mockUser },
         error: null,
       });
@@ -209,8 +211,8 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException on invalid refresh token', async () => {
-      const authClient = supabaseService.getAuthClient();
-      (authClient.auth.refreshSession as jest.Mock).mockResolvedValue({
+      const authClient = supabaseService.getAuthClient() as any;
+      authClient.auth.refreshSession.mockResolvedValue({
         data: { user: null },
         error: { message: 'Invalid refresh token' },
       });
