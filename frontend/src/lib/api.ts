@@ -1,4 +1,5 @@
 import { Product, Category, DollarRate, PaginatedResponse, Cart, CartItem, AuthResponse, UserProfile, Pagination } from "@/types";
+import { AdminUser, AdminOrder, DashboardStats, AdminUsersResponse, AdminOrdersResponse } from "@/types/admin";
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000").replace(/\/+$/, "");
 
@@ -193,12 +194,7 @@ export interface UpdateOrderStatusDto {
   status: string;
 }
 
-export interface DashboardStats {
-  users: number;
-  products: number;
-  orders: number;
-  revenue: number;
-}
+
 
 export async function fetchAdminDashboard(token: string): Promise<DashboardStats> {
   return fetchAPI<DashboardStats>("/admin/dashboard", {
@@ -206,19 +202,13 @@ export async function fetchAdminDashboard(token: string): Promise<DashboardStats
   });
 }
 
-export async function fetchAdminUsers(token: string, page = 1, limit = 20): Promise<{
-  users: any[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
-}> {
+export async function fetchAdminUsers(token: string, page = 1, limit = 20): Promise<AdminUsersResponse> {
   return fetchAPI(`/admin/users${page > 1 ? `?page=${page}` : ``}${limit > 20 ? `&limit=${limit}` : ``}`, {
     headers: authHeaders(token),
   });
 }
 
-export async function fetchAdminOrders(token: string, page = 1, limit = 20, status?: string): Promise<{
-  orders: any[];
-  pagination: { page: number; limit: number; total: number; totalPages: number };
-}> {
+export async function fetchAdminOrders(token: string, page = 1, limit = 20, status?: string): Promise<AdminOrdersResponse> {
   const params = new URLSearchParams();
   if (page > 1) params.set("page", String(page));
   if (limit > 20) params.set("limit", String(limit));

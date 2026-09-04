@@ -8,49 +8,43 @@ export class AdminService {
   async dashboard(userId: string) {
     const supabase = this.supabaseService.getClient();
 
-    const { data: _userData, error: userError, count: userCount } = await supabase
-      .from('app_users')
-      .select('*', { count: 'exact', head: true });
+    // Run independent queries in parallel for performance
+    const [
+      { data: _userData, error: userError, count: userCount },
+      { data: _productData, error: productError, count: productCount },
+      { data: _orderData, error: orderError, count: orderCount },
+      { data: revenue, error: revenueError },
+    ] = await Promise.all([
+      supabase
+        .from('app_users')
+        .select('id', { count: 'exact', head: true }),
+      supabase
+        .from('app_products')
+        .select('id', { count: 'exact', head: true }),
+      supabase
+        .from('app_orders')
+        .select('id', { count: 'exact', head: true }),
+      supabase.rpc('calculate_revenue'),
+    ]);
 
     if (userError) {
       throw new Error(`Error counting users: ${userError.message}`);
     }
-
-    const { data: _productData, error: productError, count: productCount } = await supabase
-      .from('app_products')
-      .select('*', { count: 'exact', head: true });
-
     if (productError) {
       throw new Error(`Error counting products: ${productError.message}`);
     }
-
-    const { data: _orderData, error: orderError, count: orderCount } = await supabase
-      .from('app_orders')
-      .select('*', { count: 'exact', head: true });
-
     if (orderError) {
       throw new Error(`Error counting orders: ${orderError.message}`);
     }
-
-    const { data: revenueData, error: revenueError } = await supabase
-      .from('app_orders')
-      .select('total')
-      .eq('status', 'delivered');
-
     if (revenueError) {
       throw new Error(`Error calculating revenue: ${revenueError.message}`);
     }
-
-    const revenue = (revenueData as any[]).reduce(
-      (acc: number, curr: any) => acc + (curr.total ?? 0),
-      0,
-    ) || 0;
 
     return {
       users: userCount ?? 0,
       products: productCount ?? 0,
       orders: orderCount ?? 0,
-      revenue,
+      revenue: Number(revenue) || 0,
     };
   }
 
@@ -104,7 +98,7 @@ export class AdminService {
 
     let query = supabase
       .from('app_orders')
-      .select('*', { count: 'exact' })
+      .select('id, user_id, total, status, created_at, order_number', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 

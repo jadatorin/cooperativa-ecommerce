@@ -17,6 +17,7 @@ describe('AdminService', () => {
       order: jest.fn().mockReturnThis(),
       range: jest.fn().mockReturnThis(),
       single: jest.fn(),
+      rpc: jest.fn(),
     };
   }
 
@@ -58,16 +59,13 @@ describe('AdminService', () => {
 
   describe('dashboard', () => {
     it('should return dashboard stats with counts and revenue', async () => {
-      // select is called 4 times:
-      // 1-3: count queries → resolved value directly
-      // 4: revenue query → returns chainable with .eq()
+      // Promise.all runs 4 queries in parallel: 3 count queries + 1 rpc
       mockSupabaseClient.select
         .mockResolvedValueOnce({ data: null, error: null, count: 10 })
         .mockResolvedValueOnce({ data: null, error: null, count: 25 })
         .mockResolvedValueOnce({ data: null, error: null, count: 50 });
 
-      const revenueChain = makeThenable({ data: [{ total: 100 }, { total: 200 }], error: null });
-      mockSupabaseClient.select.mockReturnValueOnce(revenueChain);
+      mockSupabaseClient.rpc.mockResolvedValue({ data: 300, error: null });
 
       const result = await service.dashboard('user-123');
 
@@ -77,6 +75,7 @@ describe('AdminService', () => {
         orders: 50,
         revenue: 300,
       });
+      expect(mockSupabaseClient.rpc).toHaveBeenCalledWith('calculate_revenue');
     });
 
     it('should handle empty revenue data', async () => {
@@ -85,8 +84,7 @@ describe('AdminService', () => {
         .mockResolvedValueOnce({ data: null, error: null, count: 10 })
         .mockResolvedValueOnce({ data: null, error: null, count: 3 });
 
-      const revenueChain = makeThenable({ data: [], error: null });
-      mockSupabaseClient.select.mockReturnValueOnce(revenueChain);
+      mockSupabaseClient.rpc.mockResolvedValue({ data: 0, error: null });
 
       const result = await service.dashboard('user-123');
 
@@ -94,11 +92,16 @@ describe('AdminService', () => {
     });
 
     it('should throw error on user count failure', async () => {
-      mockSupabaseClient.select.mockResolvedValueOnce({
-        data: null,
-        error: { message: 'Connection refused' },
-        count: null,
-      });
+      mockSupabaseClient.select
+        .mockResolvedValueOnce({
+          data: null,
+          error: { message: 'Connection refused' },
+          count: null,
+        })
+        .mockResolvedValueOnce({ data: null, error: null, count: 25 })
+        .mockResolvedValueOnce({ data: null, error: null, count: 50 });
+
+      mockSupabaseClient.rpc.mockResolvedValue({ data: 0, error: null });
 
       await expect(service.dashboard('user-123')).rejects.toThrow(
         'Error counting users: Connection refused'
@@ -112,7 +115,10 @@ describe('AdminService', () => {
           data: null,
           error: { message: 'Table not found' },
           count: null,
-        });
+        })
+        .mockResolvedValueOnce({ data: null, error: null, count: 3 });
+
+      mockSupabaseClient.rpc.mockResolvedValue({ data: 0, error: null });
 
       await expect(service.dashboard('user-123')).rejects.toThrow(
         'Error counting products: Table not found'
@@ -125,8 +131,7 @@ describe('AdminService', () => {
         .mockResolvedValueOnce({ data: null, error: null, count: 10 })
         .mockResolvedValueOnce({ data: null, error: null, count: 3 });
 
-      const revenueChain = makeThenable({ data: null, error: { message: 'Query failed' } });
-      mockSupabaseClient.select.mockReturnValueOnce(revenueChain);
+      mockSupabaseClient.rpc.mockResolvedValue({ data: null, error: { message: 'Query failed' } });
 
       await expect(service.dashboard('user-123')).rejects.toThrow(
         'Error calculating revenue: Query failed'

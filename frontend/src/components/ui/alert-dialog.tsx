@@ -112,20 +112,34 @@ function AlertDialogCancel({ children, className, ...props }: { children: React.
   );
 }
 
-function AlertDialogAction({ children, className, onClick, ...props }: { children: React.ReactNode; className?: string; onClick?: () => void } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+function AlertDialogAction({ children, className, onClick, ...props }: { children: React.ReactNode; className?: string; onClick?: () => void | Promise<void> } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   const { onOpenChange } = useAlertDialog();
+  const [isPending, setIsPending] = React.useState(false);
+
+  const handleClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    const result = onClick?.(e);
+    if (result && typeof result === "object" && "then" in result) {
+      setIsPending(true);
+      try {
+        await result;
+      } finally {
+        setIsPending(false);
+      }
+    }
+    onOpenChange(false);
+  };
+
   return (
     <button
       className={cn(
         "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background",
         "bg-primary text-primary-foreground hover:bg-primary/90",
         "h-10 px-4 py-2",
+        isPending && "opacity-70 cursor-not-allowed",
         className
       )}
-      onClick={(e) => {
-        onClick?.(e);
-        onOpenChange(false);
-      }}
+      onClick={handleClick}
+      disabled={isPending}
       {...props}
     >
       {children}

@@ -94,7 +94,7 @@ describe('AdminController', () => {
     it('should return paginated orders', async () => {
       const mockResult = {
         orders: [
-          { id: 'o1', user_id: 'u1', total: 25, status: 'pending', created_at: '2026-01-01' },
+          { id: 'o1', user_id: 'u1', total: 25, status: 'pending', created_at: '2026-01-01', order_number: 1 },
         ],
         pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
       };

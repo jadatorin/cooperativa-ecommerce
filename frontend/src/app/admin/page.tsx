@@ -1,23 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Table, TableHeader, TableRow, TableCell, TableHead, TableBody } from "@/components/ui/table";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { ErrorMessage } from "@/components/ui/error-message";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from "@/components/ui/alert-dialog";
+import { DashboardStatsCard } from "@/components/admin/DashboardStatsCard";
+import { UsersTable } from "@/components/admin/UsersTable";
+import { OrdersTable } from "@/components/admin/OrdersTable";
 import { useToast } from "@/components/ui/toast";
 import {
   fetchAdminUsers,
@@ -25,31 +14,9 @@ import {
   updateUserRole,
   updateOrderStatus,
   fetchAdminDashboard,
-  DashboardStats,
 } from "@/lib/api";
-
-interface User {
-  id: string;
-  email: string;
-  full_name?: string;
-  role: string;
-}
-
-interface Order {
-  id: string;
-  user_id: string;
-  total: number;
-  status: string;
-  created_at: string;
-  order_number?: number;
-}
-
-interface Pagination {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-}
+import { AdminUser, AdminOrder, DashboardStats } from "@/types/admin";
+import { Pagination } from "@/types";
 
 export default function AdminDashboard() {
   const { user, isAuthenticated, isLoading, login, logout, token } = useAuth();
@@ -69,17 +36,30 @@ export default function AdminDashboard() {
   }, [mounted, isAuthenticated, user, router]);
 
   // ── Data state ───────────────────────────────────────────────────────
-  const [users, setUsers] = useState<User[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [dashboardStats, setDashboardStats] = useState({ users: 0, products: 0, orders: 0, revenue: 0 });
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
+    users: 0,
+    products: 0,
+    orders: 0,
+    revenue: 0,
+  });
   const [usersPage, setUsersPage] = useState(1);
   const [ordersPage, setOrdersPage] = useState(1);
   const [usersPagination, setUsersPagination] = useState<Pagination | null>(null);
   const [ordersPagination, setOrdersPagination] = useState<Pagination | null>(null);
 
   // ── Loading & error state ────────────────────────────────────────────
-  const [loadingStates, setLoadingStates] = useState({ dashboard: true, users: true, orders: true });
-  const [errors, setErrors] = useState<{ dashboard: string | null; users: string | null; orders: string | null }>({
+  const [loadingStates, setLoadingStates] = useState({
+    dashboard: true,
+    users: true,
+    orders: true,
+  });
+  const [errors, setErrors] = useState<{
+    dashboard: string | null;
+    users: string | null;
+    orders: string | null;
+  }>({
     dashboard: null,
     users: null,
     orders: null,
@@ -92,6 +72,11 @@ export default function AdminDashboard() {
   const [targetOrderId, setTargetOrderId] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // ── AbortController refs for fetch cleanup ──────────────────────────
+  const dashboardAbortRef = useRef<AbortController | null>(null);
+  const usersAbortRef = useRef<AbortController | null>(null);
+  const ordersAbortRef = useRef<AbortController | null>(null);
+
   // ── AlertDialog state ────────────────────────────────────────────────
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
@@ -99,47 +84,74 @@ export default function AdminDashboard() {
   // ── Fetch: Dashboard ─────────────────────────────────────────────────
   const loadDashboard = async () => {
     if (!token) return;
+    dashboardAbortRef.current?.abort();
+    const controller = new AbortController();
+    dashboardAbortRef.current = controller;
     setLoadingStates((s) => ({ ...s, dashboard: true }));
     setErrors((s) => ({ ...s, dashboard: null }));
     try {
       const stats = await fetchAdminDashboard(token);
-      setDashboardStats(stats);
+      if (!controller.signal.aborted) {
+        setDashboardStats(stats);
+      }
     } catch (err) {
-      setErrors((s) => ({ ...s, dashboard: "Error al cargar las estadísticas del dashboard" }));
+      if (!controller.signal.aborted) {
+        setErrors((s) => ({ ...s, dashboard: "Error al cargar las estadísticas del dashboard" }));
+      }
     } finally {
-      setLoadingStates((s) => ({ ...s, dashboard: false }));
+      if (!controller.signal.aborted) {
+        setLoadingStates((s) => ({ ...s, dashboard: false }));
+      }
     }
   };
 
   // ── Fetch: Users ─────────────────────────────────────────────────────
   const loadUsers = async (page: number) => {
     if (!token) return;
+    usersAbortRef.current?.abort();
+    const controller = new AbortController();
+    usersAbortRef.current = controller;
     setLoadingStates((s) => ({ ...s, users: true }));
     setErrors((s) => ({ ...s, users: null }));
     try {
       const res = await fetchAdminUsers(token, page);
-      setUsers(res.users);
-      setUsersPagination(res.pagination);
+      if (!controller.signal.aborted) {
+        setUsers(res.users);
+        setUsersPagination(res.pagination);
+      }
     } catch (err) {
-      setErrors((s) => ({ ...s, users: "Error al cargar los usuarios" }));
+      if (!controller.signal.aborted) {
+        setErrors((s) => ({ ...s, users: "Error al cargar los usuarios" }));
+      }
     } finally {
-      setLoadingStates((s) => ({ ...s, users: false }));
+      if (!controller.signal.aborted) {
+        setLoadingStates((s) => ({ ...s, users: false }));
+      }
     }
   };
 
   // ── Fetch: Orders ────────────────────────────────────────────────────
   const loadOrders = async (page: number) => {
     if (!token) return;
+    ordersAbortRef.current?.abort();
+    const controller = new AbortController();
+    ordersAbortRef.current = controller;
     setLoadingStates((s) => ({ ...s, orders: true }));
     setErrors((s) => ({ ...s, orders: null }));
     try {
       const res = await fetchAdminOrders(token, page);
-      setOrders(res.orders);
-      setOrdersPagination(res.pagination);
+      if (!controller.signal.aborted) {
+        setOrders(res.orders);
+        setOrdersPagination(res.pagination);
+      }
     } catch (err) {
-      setErrors((s) => ({ ...s, orders: "Error al cargar los pedidos" }));
+      if (!controller.signal.aborted) {
+        setErrors((s) => ({ ...s, orders: "Error al cargar los pedidos" }));
+      }
     } finally {
-      setLoadingStates((s) => ({ ...s, orders: false }));
+      if (!controller.signal.aborted) {
+        setLoadingStates((s) => ({ ...s, orders: false }));
+      }
     }
   };
 
@@ -149,6 +161,15 @@ export default function AdminDashboard() {
     loadUsers(1);
     loadOrders(1);
   }, [token]);
+
+  // ── AbortController cleanup on unmount ──────────────────────────────
+  useEffect(() => {
+    return () => {
+      dashboardAbortRef.current?.abort();
+      usersAbortRef.current?.abort();
+      ordersAbortRef.current?.abort();
+    };
+  }, []);
 
   // ── Re-fetch on page change ──────────────────────────────────────────
   useEffect(() => {
@@ -181,7 +202,8 @@ export default function AdminDashboard() {
       setRoleToUpdate(null);
       setTargetUserId(null);
     } catch (err) {
-      addToast("Error al actualizar el rol", "error");
+      const message = err instanceof Error ? err.message : "Error desconocido";
+      addToast(`Error al actualizar el rol: ${message}`, "error");
     } finally {
       setIsUpdating(false);
     }
@@ -200,73 +222,25 @@ export default function AdminDashboard() {
       setOrderStatusToUpdate(null);
       setTargetOrderId(null);
     } catch (err) {
-      addToast("Error al actualizar el estado", "error");
+      const message = err instanceof Error ? err.message : "Error desconocido";
+      addToast(`Error al actualizar el estado: ${message}`, "error");
     } finally {
       setIsUpdating(false);
     }
   };
 
-  // ── Role dialog helpers ──────────────────────────────────────────────
-  const openRoleDialog = (userItem: User) => {
-    const newRole = userItem.role === "user" ? "admin" : "user";
+  // ── Callbacks for child components ───────────────────────────────────
+  const handleUsersUpdateRole = (userId: string, newRole: string) => {
     setRoleToUpdate(newRole);
-    setTargetUserId(userItem.id);
+    setTargetUserId(userId);
     setRoleDialogOpen(true);
   };
 
-  const openStatusDialog = (order: Order) => {
-    const nextStatus: Record<string, string> = {
-      pending: "confirmed",
-      confirmed: "processing",
-      processing: "ready",
-      ready: "delivered",
-    };
-    setOrderStatusToUpdate(nextStatus[order.status] || "pending");
-    setTargetOrderId(order.id);
+  const handleOrdersUpdateStatus = (orderId: string, newStatus: string) => {
+    setOrderStatusToUpdate(newStatus);
+    setTargetOrderId(orderId);
     setStatusDialogOpen(true);
   };
-
-  // ── Pagination controls ──────────────────────────────────────────────
-  function PaginationControls({
-    pagination,
-    page,
-    setPage,
-    loading,
-  }: {
-    pagination: Pagination | null;
-    page: number;
-    setPage: (p: number) => void;
-    loading: boolean;
-  }) {
-    if (!pagination || pagination.totalPages <= 1) return null;
-    return (
-      <div className="flex items-center justify-between mt-4">
-        <p className="text-sm text-muted-foreground">
-          Página {pagination.page} de {pagination.totalPages} ({pagination.total} resultados)
-        </p>
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={page <= 1 || loading}
-            onClick={() => setPage(page - 1)}
-            aria-label="Página anterior"
-          >
-            Anterior
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={page >= pagination.totalPages || loading}
-            onClick={() => setPage(page + 1)}
-            aria-label="Página siguiente"
-          >
-            Siguiente
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -283,242 +257,54 @@ export default function AdminDashboard() {
       </div>
 
       {/* Dashboard Stats */}
-      {loadingStates.dashboard ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}>
-              <CardContent className="pt-6">
-                <LoadingSpinner size="sm" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : errors.dashboard ? (
-        <div className="mb-6">
-          <ErrorMessage message={errors.dashboard} onRetry={loadDashboard} />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Usuarios Totales</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{dashboardStats.users}</p>
-              <p className="text-sm text-muted-foreground">Registrados</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Productos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{dashboardStats.products}</p>
-              <p className="text-sm text-muted-foreground">En catálogo</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Pedidos Totales</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{dashboardStats.orders}</p>
-              <p className="text-sm text-muted-foreground">Procesados</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Ingresos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">${dashboardStats.revenue.toLocaleString()}</p>
-              <p className="text-sm text-muted-foreground">Totales</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <DashboardStatsCard
+        stats={dashboardStats}
+        loading={loadingStates.dashboard}
+        error={errors.dashboard}
+        onRetry={loadDashboard}
+      />
 
       {/* Users Management */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold mb-4">Gestión de Usuarios</h2>
-
-        {loadingStates.users ? (
-          <div className="py-12">
-            <LoadingSpinner text="Cargando usuarios..." />
-          </div>
-        ) : errors.users ? (
-          <ErrorMessage message={errors.users} onRetry={() => loadUsers(usersPage)} />
-        ) : users.length === 0 ? (
-          <div className="py-12 text-center text-muted-foreground">
-            No hay usuarios registrados
-          </div>
-        ) : (
-          <>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Rol</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((u) => (
-                  <TableRow key={u.id} className="border-b">
-                    <TableCell>{u.email}</TableCell>
-                    <TableCell>{u.full_name || "Sin nombre"}</TableCell>
-                    <TableCell>
-                      <span
-                        className={`px-2 py-1 rounded text-xs ${
-                          u.role === "admin"
-                            ? "bg-primary/10 text-primary"
-                            : "bg-secondary/10 text-secondary"
-                        }`}
-                      >
-                        {u.role}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {u.role !== "admin" ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openRoleDialog(u)}
-                          aria-label={`Cambiar rol de ${u.full_name || u.email}`}
-                        >
-                          Hacer admin
-                        </Button>
-                      ) : null}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <PaginationControls
-              pagination={usersPagination}
-              page={usersPage}
-              setPage={setUsersPage}
-              loading={loadingStates.users}
-            />
-          </>
-        )}
+        <UsersTable
+          users={users}
+          pagination={usersPagination}
+          currentPage={usersPage}
+          loading={loadingStates.users}
+          error={errors.users}
+          onUpdateRole={handleUsersUpdateRole}
+          onPageChange={setUsersPage}
+          onRetry={() => loadUsers(usersPage)}
+          roleDialogOpen={roleDialogOpen}
+          onRoleDialogOpenChange={setRoleDialogOpen}
+          roleToUpdate={roleToUpdate}
+          targetUserId={targetUserId}
+          isUpdating={isUpdating}
+          onConfirmRoleUpdate={handleUpdateRole}
+        />
       </div>
 
       {/* Orders Management */}
       <div>
         <h2 className="text-2xl font-bold mb-4">Gestión de Pedidos</h2>
-
-        {loadingStates.orders ? (
-          <div className="py-12">
-            <LoadingSpinner text="Cargando pedidos..." />
-          </div>
-        ) : errors.orders ? (
-          <ErrorMessage message={errors.orders} onRetry={() => loadOrders(ordersPage)} />
-        ) : orders.length === 0 ? (
-          <div className="py-12 text-center text-muted-foreground">
-            No hay pedidos
-          </div>
-        ) : (
-          <>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Número</TableHead>
-                  <TableHead>Usuario</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {orders.map((order) => (
-                  <TableRow key={order.id} className="border-b">
-                    <TableCell>{order.order_number || order.id}</TableCell>
-                    <TableCell>{order.user_id}</TableCell>
-                    <TableCell>${order.total}</TableCell>
-                    <TableCell>
-                      <span
-                        className={`px-2 py-1 rounded text-xs ${
-                          order.status === "delivered"
-                            ? "bg-green-100 text-green-800"
-                            : order.status === "cancelled"
-                            ? "bg-red-100 text-red-800"
-                            : order.status === "pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-blue-100 text-blue-800"
-                        }`}
-                      >
-                        {order.status}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {order.status !== "delivered" && order.status !== "cancelled" ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openStatusDialog(order)}
-                          aria-label={`Actualizar estado del pedido ${order.order_number || order.id}`}
-                        >
-                          {order.status === "pending" ? "Confirmar" : "Avanzar estado"}
-                        </Button>
-                      ) : null}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <PaginationControls
-              pagination={ordersPagination}
-              page={ordersPage}
-              setPage={setOrdersPage}
-              loading={loadingStates.orders}
-            />
-          </>
-        )}
+        <OrdersTable
+          orders={orders}
+          pagination={ordersPagination}
+          currentPage={ordersPage}
+          loading={loadingStates.orders}
+          error={errors.orders}
+          onUpdateStatus={handleOrdersUpdateStatus}
+          onPageChange={setOrdersPage}
+          onRetry={() => loadOrders(ordersPage)}
+          statusDialogOpen={statusDialogOpen}
+          onStatusDialogOpenChange={setStatusDialogOpen}
+          orderStatusToUpdate={orderStatusToUpdate}
+          targetOrderId={targetOrderId}
+          isUpdating={isUpdating}
+          onConfirmStatusUpdate={handleUpdateOrderStatus}
+        />
       </div>
-
-      {/* ── Role Update AlertDialog ───────────────────────────────────── */}
-      <AlertDialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Actualizar rol de usuario</AlertDialogTitle>
-            <AlertDialogDescription>
-              {roleToUpdate === "admin"
-                ? "¿Estás seguro de que quieres hacer admin a este usuario?"
-                : "¿Estás seguro de que quieres quitar el rol de admin a este usuario?"}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleUpdateRole} disabled={isUpdating}>
-              {isUpdating ? "Actualizando..." : "Confirmar"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* ── Order Status Update AlertDialog ───────────────────────────── */}
-      <AlertDialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Actualizar estado del pedido</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Estás seguro de que quieres cambiar el estado a{" "}
-              <strong>{orderStatusToUpdate}</strong>?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleUpdateOrderStatus} disabled={isUpdating}>
-              {isUpdating ? "Actualizando..." : "Confirmar"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
