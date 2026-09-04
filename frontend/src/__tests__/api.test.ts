@@ -11,6 +11,11 @@ import {
   updateCartItem,
   removeFromCart,
   clearCart,
+  fetchAdminDashboard,
+  fetchAdminUsers,
+  fetchAdminOrders,
+  updateUserRole,
+  updateOrderStatus,
 } from "@/lib/api";
 
 // Mock fetch globally
@@ -202,5 +207,155 @@ describe("clearCart", () => {
 
     const [, options] = mockFetch.mock.calls[0];
     expect(options.method).toBe("DELETE");
+  });
+});
+
+// ── Admin API ──────────────────────────────────────────────────────────────
+
+describe("fetchAdminDashboard", () => {
+  it("fetches dashboard stats with auth header", async () => {
+    const stats = { users: 10, products: 25, orders: 50, revenue: 1500 };
+    mockFetch.mockResolvedValue(jsonResponse(stats));
+
+    const result = await fetchAdminDashboard("admin-token");
+    expect(result).toEqual(stats);
+
+    const [url, options] = mockFetch.mock.calls[0];
+    expect(url).toContain("/api/admin/dashboard");
+    expect(options.headers.Authorization).toBe("Bearer admin-token");
+  });
+
+  it("throws on non-OK response", async () => {
+    mockFetch.mockResolvedValue(jsonResponse(null, false, 403, "Forbidden"));
+
+    await expect(fetchAdminDashboard("token")).rejects.toThrow("API error: 403 Forbidden");
+  });
+});
+
+describe("fetchAdminUsers", () => {
+  it("fetches users with auth header", async () => {
+    const payload = {
+      users: [{ id: "u1", email: "a@test.com", role: "user" }],
+      pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+    };
+    mockFetch.mockResolvedValue(jsonResponse(payload));
+
+    const result = await fetchAdminUsers("admin-token");
+    expect(result).toEqual(payload);
+
+    const [url, options] = mockFetch.mock.calls[0];
+    expect(url).toContain("/api/admin/users");
+    expect(options.headers.Authorization).toBe("Bearer admin-token");
+  });
+
+  it("passes page and limit params correctly", async () => {
+    mockFetch.mockResolvedValue(jsonResponse({ users: [], pagination: { page: 2, limit: 30, total: 0, totalPages: 0 } }));
+
+    await fetchAdminUsers("token", 2, 30);
+
+    const calledUrl = mockFetch.mock.calls[0][0];
+    expect(calledUrl).toContain("page=2");
+    expect(calledUrl).toContain("limit=30");
+  });
+
+  it("does not send page param when page is 1", async () => {
+    mockFetch.mockResolvedValue(jsonResponse({ users: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } }));
+
+    await fetchAdminUsers("token", 1, 20);
+
+    const calledUrl = mockFetch.mock.calls[0][0];
+    expect(calledUrl).not.toContain("page=");
+    expect(calledUrl).not.toContain("limit=");
+  });
+
+  it("throws on error", async () => {
+    mockFetch.mockResolvedValue(jsonResponse(null, false, 500, "Internal Server Error"));
+
+    await expect(fetchAdminUsers("token")).rejects.toThrow("API error: 500 Internal Server Error");
+  });
+});
+
+describe("fetchAdminOrders", () => {
+  it("fetches orders with auth header", async () => {
+    const payload = {
+      orders: [{ id: "o1", user_id: "u1", total: 25, status: "pending" }],
+      pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+    };
+    mockFetch.mockResolvedValue(jsonResponse(payload));
+
+    const result = await fetchAdminOrders("admin-token");
+    expect(result).toEqual(payload);
+
+    const [url, options] = mockFetch.mock.calls[0];
+    expect(url).toContain("/api/admin/orders");
+    expect(options.headers.Authorization).toBe("Bearer admin-token");
+  });
+
+  it("passes status filter correctly", async () => {
+    mockFetch.mockResolvedValue(jsonResponse({ orders: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } }));
+
+    await fetchAdminOrders("token", 1, 20, "delivered");
+
+    const calledUrl = mockFetch.mock.calls[0][0];
+    expect(calledUrl).toContain("status=delivered");
+  });
+
+  it("does not send status param when not provided", async () => {
+    mockFetch.mockResolvedValue(jsonResponse({ orders: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } }));
+
+    await fetchAdminOrders("token", 1, 20);
+
+    const calledUrl = mockFetch.mock.calls[0][0];
+    expect(calledUrl).not.toContain("status=");
+  });
+
+  it("throws on error", async () => {
+    mockFetch.mockResolvedValue(jsonResponse(null, false, 401, "Unauthorized"));
+
+    await expect(fetchAdminOrders("token")).rejects.toThrow("API error: 401 Unauthorized");
+  });
+});
+
+describe("updateUserRole", () => {
+  it("sends PUT with role in body", async () => {
+    const response = { role: "admin" };
+    mockFetch.mockResolvedValue(jsonResponse(response));
+
+    const result = await updateUserRole("admin-token", "u1", "admin");
+    expect(result).toEqual(response);
+
+    const [url, options] = mockFetch.mock.calls[0];
+    expect(url).toContain("/api/admin/users/u1");
+    expect(options.method).toBe("PUT");
+    expect(JSON.parse(options.body)).toEqual({ role: "admin" });
+    expect(options.headers.Authorization).toBe("Bearer admin-token");
+  });
+
+  it("throws on error", async () => {
+    mockFetch.mockResolvedValue(jsonResponse(null, false, 403, "Forbidden"));
+
+    await expect(updateUserRole("token", "u1", "admin")).rejects.toThrow("API error: 403 Forbidden");
+  });
+});
+
+describe("updateOrderStatus", () => {
+  it("sends PUT with status in body", async () => {
+    const response = { status: "delivered" };
+    mockFetch.mockResolvedValue(jsonResponse(response));
+
+    const result = await updateOrderStatus("admin-token", "o1", "delivered");
+    expect(result).toEqual(response);
+
+    const [url, options] = mockFetch.mock.calls[0];
+    expect(url).toContain("/api/admin/orders/o1/status");
+    expect(options.method).toBe("PUT");
+    expect(JSON.parse(options.body)).toEqual({ status: "delivered" });
+    expect(options.headers.Authorization).toBe("Bearer admin-token");
+  });
+
+  it("throws on error", async () => {
+    mockFetch.mockResolvedValue(jsonResponse(null, false, 400, "Bad Request"));
+
+    await expect(updateOrderStatus("token", "o1", "invalid")).rejects.toThrow("API error: 400 Bad Request");
   });
 });

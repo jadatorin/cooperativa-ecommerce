@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { cn } from "@/lib/utils";
 
 interface TableProps {
   children: React.ReactNode;
@@ -56,6 +57,20 @@ const TableCell = React.forwardRef<HTMLTableCellElement, TableCellProps>(
 );
 TableCell.displayName = "TableCell";
 
+interface TableHeadProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
+  ({ children, className, ...props }, ref) => (
+    <th ref={ref} className={cn("px-4 py-2 text-left font-medium text-muted-foreground", className)} {...props}>
+      {children}
+    </th>
+  )
+);
+TableHead.displayName = "TableHead";
+
 interface TableBodyProps {
   children: React.ReactNode;
   className?: string;
@@ -68,4 +83,4 @@ const TableBody = React.forwardRef<HTMLTableSectionElement, TableBodyProps>(
 );
 TableBody.displayName = "TableBody";
 
-export { Table, TableHeader, TableRow, TableCell, TableBody };
+export { Table, TableHeader, TableRow, TableCell, TableHead, TableBody };

@@ -11,7 +11,11 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { Role } from '../../common/enums/role.enum';
+import { UpdateUserRoleDto } from './dto/update-user-role.dto';
+import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 
 @ApiTags('Admin')
 @Controller('admin')
@@ -21,6 +25,7 @@ export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Get('dashboard')
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Get admin dashboard stats' })
   @ApiResponse({ status: 200, description: 'Dashboard stats' })
   async dashboard(@Request() req: any) {
@@ -28,6 +33,7 @@ export class AdminController {
   }
 
   @Get('users')
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'List all users (admin only)' })
   @ApiResponse({ status: 200, description: 'Users list' })
   async getUsers(@Request() req: any, @Query() query: any) {
@@ -35,17 +41,19 @@ export class AdminController {
   }
 
   @Put('users/:id')
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Update user role (admin only)' })
   @ApiResponse({ status: 200, description: 'User updated' })
   async updateUserRole(
     @Request() req: any,
     @Param('id') userId: string,
-    @Body() roleDto: { role: string },
+    @Body() roleDto: UpdateUserRoleDto,
   ) {
-    return this.adminService.updateUserRole(userId, roleDto.role);
+    return this.adminService.updateUserRole(userId, roleDto.role, req.user.id);
   }
 
   @Get('orders')
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'List all orders with filters (admin only)' })
   @ApiResponse({ status: 200, description: 'Orders list' })
   async getOrders(@Request() req: any, @Query() query: any) {
@@ -53,12 +61,13 @@ export class AdminController {
   }
 
   @Put('orders/:id/status')
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Update order status (admin only)' })
   @ApiResponse({ status: 200, description: 'Order status updated' })
   async updateOrderStatus(
     @Request() req: any,
     @Param('id') orderId: string,
-    @Body() statusDto: { status: string },
+    @Body() statusDto: UpdateOrderStatusDto,
   ) {
     return this.adminService.updateOrderStatus(orderId, statusDto.status);
   }

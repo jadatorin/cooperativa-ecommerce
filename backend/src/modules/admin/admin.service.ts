@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 
 @Injectable()
@@ -35,7 +35,7 @@ export class AdminService {
     const { data: revenueData, error: revenueError } = await supabase
       .from('app_orders')
       .select('total')
-      .eq('status', 'completed');
+      .eq('status', 'delivered');
 
     if (revenueError) {
       throw new Error(`Error calculating revenue: ${revenueError.message}`);
@@ -60,7 +60,7 @@ export class AdminService {
 
     const { data, error, count } = await supabase
       .from('app_users')
-      .select('*', { count: 'exact' })
+      .select('id, email, full_name, role, created_at', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -79,7 +79,11 @@ export class AdminService {
     };
   }
 
-  async updateUserRole(userId: string, role: string) {
+  async updateUserRole(userId: string, role: string, currentUserId: string) {
+    if (userId === currentUserId) {
+      throw new ForbiddenException('Admin cannot change their own role');
+    }
+
     const supabase = this.supabaseService.getClient();
 
     const { error } = await supabase
