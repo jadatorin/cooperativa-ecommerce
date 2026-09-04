@@ -184,7 +184,73 @@ export async function fetchOrder(token: string, orderId: string): Promise<Order>
   });
 }
 
-// ── Favorites ────────────────────────────────────────────────────────────
+// ── Admin ────────────────────────────────────────────────────────────────
+export interface UpdateUserRoleDto {
+  role: string;
+}
+
+export interface UpdateOrderStatusDto {
+  status: string;
+}
+
+export interface DashboardStats {
+  users: number;
+  products: number;
+  orders: number;
+  revenue: number;
+}
+
+export async function fetchAdminDashboard(token: string): Promise<DashboardStats> {
+  return fetchAPI<DashboardStats>("/admin/dashboard", {
+    headers: authHeaders(token),
+  });
+}
+
+export async function fetchAdminUsers(token: string, page = 1, limit = 20): Promise<{
+  users: any[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}> {
+  return fetchAPI(`/admin/users${page > 1 ? `?page=${page}` : ``}${limit > 20 ? `&limit=${limit}` : ``}`, {
+    headers: authHeaders(token),
+  });
+}
+
+export async function fetchAdminOrders(token: string, page = 1, limit = 20, status?: string): Promise<{
+  orders: any[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}> {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  if (limit > 20) params.set("limit", String(limit));
+  if (status) params.set("status", status);
+  return fetchAPI(`/admin/orders${params.toString() ? `?${params.toString()}` : ``}`, {
+    headers: authHeaders(token),
+  });
+}
+
+export async function updateUserRole(token: string, userId: string, role: string): Promise<{ role: string }> {
+  return fetchAPI<{ role: string }>(`/admin/users/${userId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(token),
+    },
+    body: JSON.stringify({ role }),
+  });
+}
+
+export async function updateOrderStatus(token: string, orderId: string, status: string): Promise<{ status: string }> {
+  return fetchAPI<{ status: string }>(`/admin/orders/${orderId}/status`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(token),
+    },
+    body: JSON.stringify({ status }),
+  });
+}
+
+// ── Favorites ──────────────────────────────────────────────────────────
 
 export interface Favorite {
   id: string;

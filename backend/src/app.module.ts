@@ -16,6 +16,7 @@ import { FavoritesModule } from './modules/favorites/favorites.module';
 import { DollarRateModule } from './modules/dollar-rate/dollar-rate.module';
 import { SupabaseModule } from './modules/supabase/supabase.module';
 import { HealthModule } from './health/health.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { HealthModule } from './health/health.module';
     DollarRateModule,
     HealthModule,
     MonitoringModule,
+    AdminModule,
   ],
   providers: [
     CacheService,
