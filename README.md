@@ -192,3 +192,19 @@ ISC
 - ✅ **Lazy loading** en 7 páginas del frontend
 - ✅ **Bundle analyzer** configurado (`npm run analyze`)
 - ✅ Health check completo con status de cache y métricas
+
+---
+
+### 🆕 Novedades en esta versión
+
+- ✅ **Redis cache** con fallback in-memory
+- ✅ **Monitoring** en `/api/health` (métricas de tiempo de respuesta)
+- ✅ **16 índices de base de datos** para queries optimizadas
+- ✅ **Lazy loading** en 7 páginas del frontend
+- ✅ **Bundle analyzer** configurado (`npm run analyze`)
+- ✅ Health check completo con status de cache y métricas
+
+---
+
+**Autor**: jadatorin (aka Bitorin)  
+**GitHub**: [@jadatorin](https://github.com/jadatorin) ⭐ Si te resultó útil, dale una estrella al repo!
