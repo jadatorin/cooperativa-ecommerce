@@ -206,5 +206,7 @@ ISC
 
 ---
 
-**Autor**: jadatorin (aka Bitorin)  
-**GitHub**: [@jadatorin](https://github.com/jadatorin) ⭐ Si te resultó útil, dale una estrella al repo!
+👥**Autor**: jadatorin (aka Bitorin)  
+![GitHub](https://shields.io)**GitHub**: [@jadatorin](https://github.com/jadatorin) 
+_____________________________________________________
+ ⭐ Si te resultó útil, dale una estrella al repo!
