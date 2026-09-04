@@ -4,20 +4,6 @@ E-commerce completo para Cooperativa 5 de Julio con NestJS y Next.js.
 
 ## 🏗️ Arquitectura
 
-```mermaid
-graph TD
-    Frontend[Frontend (Next.js 16 + Tailwind v4 + shadcn/ui)]
-    Backend[Backend (NestJS 10 + Supabase)]
-    Redis[Redis Cache]
-    Monitoring[Monitoring & Metrics]
-    DB[(PostgreSQL 16 via Supabase)]
-
-    Frontend -->|HTTPS| Backend
-    Backend -->|Queries| DB
-    Backend -->|Cache| Redis
-    Backend -->|Metrics| Monitoring
-```
-
 - **Frontend**: Next.js 16 + Tailwind v4 + shadcn/ui • Lazy loading • Bundle analyzer
 - **Backend**: NestJS 10 • Redis • Monitoring • 16 DB indexes
 - **Database**: Supabase (PostgreSQL 16) • Realtime • Storage
