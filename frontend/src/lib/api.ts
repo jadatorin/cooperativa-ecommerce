@@ -154,6 +154,21 @@ export interface OrderResponse {
   };
 }
 
+export interface OrderDetail {
+  id: string;
+  order_number: number;
+  date: string;
+  items: OrderItem[];
+  total: number;
+  tax: number;
+  subtotal: number;
+  total_paid: number;
+  payment_method: string;
+  customer_name?: string;
+  customer_email?: string;
+  created_at: string;
+}
+
 export async function createOrder(
   token: string,
   notes?: string
@@ -181,6 +196,12 @@ export async function fetchOrders(
 
 export async function fetchOrder(token: string, orderId: string): Promise<Order> {
   return fetchAPI<Order>(`/orders/${orderId}`, {
+    headers: authHeaders(token),
+  });
+}
+
+export async function fetchOrderDetail(token: string, orderId: string): Promise<OrderDetail> {
+  return fetchAPI<OrderDetail>(`/orders/${orderId}`, {
     headers: authHeaders(token),
   });
 }

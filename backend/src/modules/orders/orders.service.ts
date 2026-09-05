@@ -105,14 +105,26 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
 
+    // Extended: fetch items with product names via LEFT JOIN with app_products
     const { data: items } = await supabase
       .from('app_order_items')
-      .select('*')
+      .select(`
+        *,
+        app_products(name)
+      `)
       .eq('order_id', orderId);
+
+    // Format items with product_name fallback for deleted products
+    const formattedItems = (items || []).map((item: any) => ({
+      product_name: item.app_products?.name || 'Producto eliminado',
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+      subtotal: item.quantity * item.unit_price,
+    }));
 
     return {
       ...order,
-      items: items || [],
+      items: formattedItems,
     };
   }
 }
