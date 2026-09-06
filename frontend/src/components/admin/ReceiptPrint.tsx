@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { Table, TableHeader, TableRow, TableCell, TableHead, TableBody } from "@/components/ui/table";
 
 interface OrderItem {
@@ -29,13 +29,13 @@ interface ReceiptPrintProps {
 }
 
 export function ReceiptPrint({ order, onClose }: ReceiptPrintProps) {
-  const printCalled = useRef(false);
+  const receiptRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (printCalled.current) return;
-    printCalled.current = true;
+  const handlePrint = () => {
+    // 1. Inject print styles
+    const existingStyle = document.getElementById("receipt-print-styles");
+    if (existingStyle) existingStyle.remove();
 
-    // 1. Inject print-only styles into <head>
     const style = document.createElement("style");
     style.id = "receipt-print-styles";
     style.textContent = `
@@ -59,28 +59,22 @@ export function ReceiptPrint({ order, onClose }: ReceiptPrintProps) {
         #receipt-print-root * {
           visibility: visible !important;
         }
+        .no-print { display: none !important; }
       }
     `;
     document.head.appendChild(style);
 
-    // 2. Listen for afterprint to clean up and close
+    // 2. Open print dialog — triggered by user click so browser allows it
+    window.print();
+
+    // 3. Clean up after print dialog closes
     const handleAfterPrint = () => {
       style.remove();
+      window.removeEventListener("afterprint", handleAfterPrint);
       onClose?.();
     };
     window.addEventListener("afterprint", handleAfterPrint);
-
-    // 3. Trigger print after a short delay to ensure DOM is painted
-    const timer = setTimeout(() => {
-      window.print();
-    }, 100);
-
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener("afterprint", handleAfterPrint);
-      style.remove();
-    };
-  }, [onClose]);
+  };
 
   const formattedDate = new Date(order.date).toLocaleDateString("es-MX", {
     year: "numeric",
@@ -103,17 +97,25 @@ export function ReceiptPrint({ order, onClose }: ReceiptPrintProps) {
   return (
     <div
       id="receipt-print-root"
+      ref={receiptRef}
       className="fixed inset-0 z-50 bg-white"
       style={{ overflow: "auto" }}
     >
-      {/* Close button — hidden on print via CSS */}
-      <button
-        onClick={onClose}
-        className="no-print fixed top-4 right-4 bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700 z-50"
-        style={{ display: "block" }}
-      >
-        Cerrar vista previa
-      </button>
+      {/* Action buttons — hidden on print */}
+      <div className="no-print fixed top-4 right-4 flex gap-2 z-50">
+        <button
+          onClick={handlePrint}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 font-medium"
+        >
+          🖨️ Imprimir
+        </button>
+        <button
+          onClick={onClose}
+          className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700"
+        >
+          Cerrar
+        </button>
+      </div>
 
       {/* Receipt content */}
       <div style={{ maxWidth: "80mm", margin: "0 auto", padding: "4mm" }}>
@@ -172,13 +174,6 @@ export function ReceiptPrint({ order, onClose }: ReceiptPrintProps) {
           {order.shop_phone && <div>{order.shop_phone}</div>}
         </div>
       </div>
-
-      {/* Inline styles for screen-only elements */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        @media print {
-          .no-print { display: none !important; }
-        }
-      `}} />
     </div>
   );
 }
