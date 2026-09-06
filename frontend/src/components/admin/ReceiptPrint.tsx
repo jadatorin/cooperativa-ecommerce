@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Table, TableHeader, TableRow, TableCell, TableHead, TableBody } from "@/components/ui/table";
 
 interface OrderItem {
@@ -29,13 +29,57 @@ interface ReceiptPrintProps {
 }
 
 export function ReceiptPrint({ order, onClose }: ReceiptPrintProps) {
+  const printCalled = useRef(false);
+
   useEffect(() => {
-    window.print();
-    // Call onClose after print dialog closes
-    const timer = setTimeout(() => {
+    if (printCalled.current) return;
+    printCalled.current = true;
+
+    // 1. Inject print-only styles into <head>
+    const style = document.createElement("style");
+    style.id = "receipt-print-styles";
+    style.textContent = `
+      @media print {
+        body > * {
+          display: none !important;
+        }
+        #receipt-print-root {
+          display: block !important;
+          position: fixed !important;
+          left: 0 !important;
+          top: 0 !important;
+          width: 80mm !important;
+          background: white !important;
+          z-index: 999999 !important;
+          padding: 4mm !important;
+          font-family: 'Courier New', monospace !important;
+          font-size: 12pt !important;
+          color: black !important;
+        }
+        #receipt-print-root * {
+          visibility: visible !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // 2. Listen for afterprint to clean up and close
+    const handleAfterPrint = () => {
+      style.remove();
       onClose?.();
-    }, 1000);
-    return () => clearTimeout(timer);
+    };
+    window.addEventListener("afterprint", handleAfterPrint);
+
+    // 3. Trigger print after a short delay to ensure DOM is painted
+    const timer = setTimeout(() => {
+      window.print();
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("afterprint", handleAfterPrint);
+      style.remove();
+    };
   }, [onClose]);
 
   const formattedDate = new Date(order.date).toLocaleDateString("es-MX", {
@@ -44,13 +88,9 @@ export function ReceiptPrint({ order, onClose }: ReceiptPrintProps) {
     day: "numeric",
   });
 
-  const formatMoney = (amount: number) => {
-    return `$${Number(amount).toFixed(2)}`;
-  };
-
+  const formatMoney = (amount: number) => `$${Number(amount).toFixed(2)}`;
   const paymentMethod = order.payment_method || "No especificado";
 
-  // Truncate long product names for thermal printer (80mm width constraint)
   const truncateProductName = (name: string | undefined) => {
     if (!name) return "-";
     if (name.length <= 30) return name;
@@ -58,25 +98,36 @@ export function ReceiptPrint({ order, onClose }: ReceiptPrintProps) {
   };
 
   const items = order.items;
-
-  // Use shop_name or fallback to generic name
   const shopName = order.shop_name || "Cooperativa 5 de Julio";
 
   return (
-    <div className="fixed inset-0 z-50 bg-white receipt-print-container">
-      {/* Print-only receipt */}
-      <div className="receipt-print p-4">
-        {/* Shop name/logo at top */}
-        <div className="text-center mb-6">
-          <h1 className="text-xl font-bold">{shopName}</h1>
-          {order.shop_address && <p className="text-sm text-muted-foreground">{order.shop_address}</p>}
-          {order.shop_phone && <p className="text-xs text-muted-foreground">{order.shop_phone}</p>}
+    <div
+      id="receipt-print-root"
+      className="fixed inset-0 z-50 bg-white"
+      style={{ overflow: "auto" }}
+    >
+      {/* Close button — hidden on print via CSS */}
+      <button
+        onClick={onClose}
+        className="no-print fixed top-4 right-4 bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700 z-50"
+        style={{ display: "block" }}
+      >
+        Cerrar vista previa
+      </button>
+
+      {/* Receipt content */}
+      <div style={{ maxWidth: "80mm", margin: "0 auto", padding: "4mm" }}>
+        {/* Shop name */}
+        <div style={{ textAlign: "center", marginBottom: "6mm" }}>
+          <h1 style={{ fontSize: "16pt", fontWeight: "bold", margin: 0 }}>{shopName}</h1>
+          {order.shop_address && <p style={{ fontSize: "10pt", color: "#666", margin: "2mm 0 0" }}>{order.shop_address}</p>}
+          {order.shop_phone && <p style={{ fontSize: "9pt", color: "#666", margin: "1mm 0 0" }}>{order.shop_phone}</p>}
         </div>
 
         {/* Order info */}
-        <div className="mb-6">
-          <p>Número: {order.order_number}</p>
-          <p>Fecha: {formattedDate}</p>
+        <div style={{ marginBottom: "6mm" }}>
+          <p style={{ margin: "1mm 0" }}>Número: {order.order_number}</p>
+          <p style={{ margin: "1mm 0" }}>Fecha: {formattedDate}</p>
         </div>
 
         {/* Items table */}
@@ -91,8 +142,8 @@ export function ReceiptPrint({ order, onClose }: ReceiptPrintProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((item) => (
-                <TableRow key={item.product_name || `${item.quantity}-${item.unit_price}`} className="border-b">
+              {items.map((item, idx) => (
+                <TableRow key={idx} className="border-b">
                   <TableCell className="text-left">
                     {truncateProductName(item.product_name)}
                   </TableCell>
@@ -104,52 +155,28 @@ export function ReceiptPrint({ order, onClose }: ReceiptPrintProps) {
             </TableBody>
           </Table>
         ) : (
-          <p className="text-center text-muted-foreground">No hay items en este pedido</p>
+          <p style={{ textAlign: "center", color: "#999" }}>No hay items en este pedido</p>
         )}
 
         {/* Totals */}
-        <div className="mt-8 pt-8 border-t text-right">
-          <p>Subtotal: {formatMoney(order.subtotal)}</p>
-          <p>IVA (16%): {formatMoney(order.tax)}</p>
-          <p>Total: {formatMoney(order.total)}</p>
-          <p>Método: {paymentMethod}</p>
+        <div style={{ marginTop: "8mm", paddingTop: "4mm", borderTop: "1px solid #ccc", textAlign: "right" }}>
+          <p style={{ margin: "1mm 0" }}>Subtotal: {formatMoney(order.subtotal)}</p>
+          <p style={{ margin: "1mm 0" }}>IVA (16%): {formatMoney(order.tax)}</p>
+          <p style={{ margin: "1mm 0", fontWeight: "bold" }}>Total: {formatMoney(order.total)}</p>
+          <p style={{ margin: "1mm 0" }}>Método: {paymentMethod}</p>
         </div>
 
         {/* Footer */}
-        <div className="mt-8 text-center text-xs text-muted-foreground">
+        <div style={{ marginTop: "8mm", textAlign: "center", fontSize: "8pt", color: "#999" }}>
           {order.shop_address && <div>Contacto: {order.shop_address}</div>}
           {order.shop_phone && <div>{order.shop_phone}</div>}
         </div>
       </div>
 
-      {/* Close button (visible on screen, hidden on print) */}
-      <button
-        onClick={onClose}
-        className="no-print fixed top-4 right-4 bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700 z-50"
-      >
-        Cerrar vista previa
-      </button>
-
+      {/* Inline styles for screen-only elements */}
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
-          body > *:not(.receipt-print-container) {
-            display: none !important;
-          }
-          .receipt-print-container {
-            position: fixed !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 80mm !important;
-            background: white !important;
-            z-index: 999999 !important;
-          }
-          .receipt-print {
-            font-family: monospace !important;
-            font-size: 12pt !important;
-          }
-          .no-print {
-            display: none !important;
-          }
+          .no-print { display: none !important; }
         }
       `}} />
     </div>
