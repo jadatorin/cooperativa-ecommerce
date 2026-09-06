@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Table, TableHeader, TableRow, TableCell, TableHead, TableBody } from "@/components/ui/table";
 
 interface OrderItem {
@@ -28,11 +29,27 @@ interface ReceiptPrintProps {
   onClose?: () => void;
 }
 
-export function ReceiptPrint({ order, onClose }: ReceiptPrintProps) {
-  const receiptRef = useRef<HTMLDivElement>(null);
+function ReceiptContent({ order, onClose }: { order: ReceiptPrintProps["order"]; onClose?: () => void }) {
+  const formattedDate = new Date(order.date).toLocaleDateString("es-MX", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const formatMoney = (amount: number) => `$${Number(amount).toFixed(2)}`;
+  const paymentMethod = order.payment_method || "No especificado";
+
+  const truncateProductName = (name: string | undefined) => {
+    if (!name) return "-";
+    if (name.length <= 30) return name;
+    return name.substring(0, 27) + "...";
+  };
+
+  const items = order.items;
+  const shopName = order.shop_name || "Cooperativa 5 de Julio";
 
   const handlePrint = () => {
-    // 1. Inject print styles
+    // Inject print styles
     const existingStyle = document.getElementById("receipt-print-styles");
     if (existingStyle) existingStyle.remove();
 
@@ -64,10 +81,8 @@ export function ReceiptPrint({ order, onClose }: ReceiptPrintProps) {
     `;
     document.head.appendChild(style);
 
-    // 2. Open print dialog — triggered by user click so browser allows it
     window.print();
 
-    // 3. Clean up after print dialog closes
     const handleAfterPrint = () => {
       style.remove();
       window.removeEventListener("afterprint", handleAfterPrint);
@@ -76,28 +91,9 @@ export function ReceiptPrint({ order, onClose }: ReceiptPrintProps) {
     window.addEventListener("afterprint", handleAfterPrint);
   };
 
-  const formattedDate = new Date(order.date).toLocaleDateString("es-MX", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  const formatMoney = (amount: number) => `$${Number(amount).toFixed(2)}`;
-  const paymentMethod = order.payment_method || "No especificado";
-
-  const truncateProductName = (name: string | undefined) => {
-    if (!name) return "-";
-    if (name.length <= 30) return name;
-    return name.substring(0, 27) + "...";
-  };
-
-  const items = order.items;
-  const shopName = order.shop_name || "Cooperativa 5 de Julio";
-
   return (
     <div
       id="receipt-print-root"
-      ref={receiptRef}
       className="fixed inset-0 z-50 bg-white"
       style={{ overflow: "auto" }}
     >
@@ -175,5 +171,21 @@ export function ReceiptPrint({ order, onClose }: ReceiptPrintProps) {
         </div>
       </div>
     </div>
+  );
+}
+
+export function ReceiptPrint(props: ReceiptPrintProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  // Render directly into <body> so it's a direct child — CSS body > * can target it
+  return createPortal(
+    <ReceiptContent order={props.order} onClose={props.onClose} />,
+    document.body
   );
 }
