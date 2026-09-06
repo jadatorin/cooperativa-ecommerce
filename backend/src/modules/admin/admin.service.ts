@@ -13,7 +13,7 @@ export class AdminService {
       { data: _userData, error: userError, count: userCount },
       { data: _productData, error: productError, count: productCount },
       { data: _orderData, error: orderError, count: orderCount },
-      { data: revenue, error: revenueError },
+      { data: revenueOrders, error: revenueError },
     ] = await Promise.all([
       supabase
         .from('app_users')
@@ -24,7 +24,10 @@ export class AdminService {
       supabase
         .from('app_orders')
         .select('id', { count: 'exact', head: true }),
-      supabase.rpc('calculate_revenue'),
+      supabase
+        .from('app_orders')
+        .select('total')
+        .eq('status', 'delivered'),
     ]);
 
     if (userError) {
@@ -44,7 +47,7 @@ export class AdminService {
       users: userCount ?? 0,
       products: productCount ?? 0,
       orders: orderCount ?? 0,
-      revenue: Number(revenue) || 0,
+      revenue: (revenueOrders || []).reduce((sum, order) => sum + (order.total || 0), 0),
     };
   }
 
@@ -120,6 +123,42 @@ export class AdminService {
         total: count ?? 0,
         totalPages: Math.ceil((count ?? 0) / limit),
       },
+    };
+  }
+
+  async getOrderDetail(orderId: string) {
+    const supabase = this.supabaseService.getClient();
+
+    const { data: order, error } = await supabase
+      .from('app_orders')
+      .select('*')
+      .eq('id', orderId)
+      .single();
+
+    if (error || !order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    // Fetch items with product names
+    const { data: items } = await supabase
+      .from('app_order_items')
+      .select(`
+        *,
+        app_products(name)
+      `)
+      .eq('order_id', orderId);
+
+    const formattedItems = (items || []).map((item: any) => ({
+      product_name: item.app_products?.name || 'Producto eliminado',
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+      subtotal: item.quantity * item.unit_price,
+    }));
+
+    return {
+      ...order,
+      date: order.created_at,
+      items: formattedItems,
     };
   }
 

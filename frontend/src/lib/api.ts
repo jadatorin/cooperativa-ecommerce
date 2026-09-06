@@ -239,6 +239,12 @@ export async function fetchAdminOrders(token: string, page = 1, limit = 20, stat
   });
 }
 
+export async function fetchAdminOrderDetail(token: string, orderId: string): Promise<OrderDetail> {
+  return fetchAPI<OrderDetail>(`/admin/orders/${orderId}`, {
+    headers: authHeaders(token),
+  });
+}
+
 export async function updateUserRole(token: string, userId: string, role: string): Promise<{ role: string }> {
   return fetchAPI<{ role: string }>(`/admin/users/${userId}`, {
     method: "PUT",

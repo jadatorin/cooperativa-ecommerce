@@ -60,6 +60,17 @@ export class AdminController {
     return this.adminService.getOrders(query.page, query.limit, query.status);
   }
 
+  @Get('orders/:id')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Get order detail with items (admin only)' })
+  @ApiResponse({ status: 200, description: 'Order detail' })
+  async getOrderDetail(
+    @Request() req: any,
+    @Param('id') orderId: string,
+  ) {
+    return this.adminService.getOrderDetail(orderId);
+  }
+
   @Put('orders/:id/status')
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Update order status (admin only)' })

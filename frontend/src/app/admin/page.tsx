@@ -294,6 +294,7 @@ export default function AdminDashboard() {
           currentPage={ordersPage}
           loading={loadingStates.orders}
           error={errors.orders}
+          token={token!}
           onUpdateStatus={handleOrdersUpdateStatus}
           onPageChange={setOrdersPage}
           onRetry={() => loadOrders(ordersPage)}

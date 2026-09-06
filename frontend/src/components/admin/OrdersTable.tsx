@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -22,6 +23,8 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { PaginationControls } from "./PaginationControls";
+import { ReceiptPrint } from "./ReceiptPrint";
+import { fetchAdminOrderDetail, type OrderDetail } from "@/lib/api";
 import type { AdminOrder } from "@/types/admin";
 import type { Pagination } from "@/types";
 
@@ -31,6 +34,7 @@ interface OrdersTableProps {
   currentPage: number;
   loading: boolean;
   error: string | null;
+  token: string;
   onUpdateStatus: (orderId: string, newStatus: string) => void;
   onPageChange: (page: number) => void;
   onRetry?: () => void;
@@ -56,6 +60,7 @@ export function OrdersTable({
   currentPage,
   loading,
   error,
+  token,
   onUpdateStatus,
   onPageChange,
   onRetry,
@@ -66,9 +71,24 @@ export function OrdersTable({
   isUpdating,
   onConfirmStatusUpdate,
 }: OrdersTableProps) {
+  const [orderToPrint, setOrderToPrint] = useState<OrderDetail | null>(null);
+  const [loadingPrint, setLoadingPrint] = useState(false);
+
   const openStatusDialog = (order: AdminOrder) => {
     const nextStatus = STATUS_NEXT[order.status] || "pending";
     onUpdateStatus(order.id, nextStatus);
+  };
+
+  const handlePrint = async (order: AdminOrder) => {
+    setLoadingPrint(true);
+    try {
+      const detail = await fetchAdminOrderDetail(token, order.id);
+      setOrderToPrint(detail);
+    } catch {
+      alert("Error al cargar los detalles del pedido para imprimir");
+    } finally {
+      setLoadingPrint(false);
+    }
   };
 
   if (loading) {
@@ -125,16 +145,27 @@ export function OrdersTable({
                 </span>
               </TableCell>
               <TableCell className="text-right">
-                {order.status !== "delivered" && order.status !== "cancelled" ? (
+                <div className="flex gap-2 justify-end">
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => openStatusDialog(order)}
-                    aria-label={`Actualizar estado del pedido ${order.order_number || order.id}`}
+                    onClick={() => handlePrint(order)}
+                    disabled={loadingPrint}
+                    aria-label={`Imprimir pedido ${order.order_number || order.id}`}
                   >
-                    {order.status === "pending" ? "Confirmar" : "Avanzar estado"}
+                    {loadingPrint ? "Cargando..." : "🖨️ Imprimir"}
                   </Button>
-                ) : null}
+                  {order.status !== "delivered" && order.status !== "cancelled" ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openStatusDialog(order)}
+                      aria-label={`Actualizar estado del pedido ${order.order_number || order.id}`}
+                    >
+                      {order.status === "pending" ? "Confirmar" : "Avanzar estado"}
+                    </Button>
+                  ) : null}
+                </div>
               </TableCell>
             </TableRow>
           ))}
@@ -166,6 +197,24 @@ export function OrdersTable({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Receipt Print */}
+      {orderToPrint && (
+        <ReceiptPrint
+          order={{
+            order_number: orderToPrint.order_number,
+            date: orderToPrint.date || orderToPrint.created_at,
+            items: orderToPrint.items || [],
+            total: orderToPrint.total,
+            tax: orderToPrint.tax || orderToPrint.total * 0.16,
+            subtotal: orderToPrint.subtotal || orderToPrint.total / 1.16,
+            total_paid: orderToPrint.total_paid || orderToPrint.total,
+            payment_method: orderToPrint.payment_method || "Efectivo",
+            customer_name: orderToPrint.customer_name || orderToPrint.customer_email,
+          }}
+          onClose={() => setOrderToPrint(null)}
+        />
+      )}
     </>
   );
 }

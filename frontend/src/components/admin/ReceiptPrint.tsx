@@ -18,18 +18,25 @@ interface ReceiptPrintProps {
     total: number;
     tax: number;
     subtotal: number;
+    total_paid?: number;
     payment_method?: string;
     customer_name?: string;
     shop_name?: string;
     shop_address?: string;
     shop_phone?: string;
   };
+  onClose?: () => void;
 }
 
-export function ReceiptPrint({ order }: ReceiptPrintProps) {
+export function ReceiptPrint({ order, onClose }: ReceiptPrintProps) {
   useEffect(() => {
     window.print();
-  }, []);
+    // Call onClose after print dialog closes
+    const timer = setTimeout(() => {
+      onClose?.();
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
 
   const formattedDate = new Date(order.date).toLocaleDateString("es-MX", {
     year: "numeric",
@@ -48,16 +55,16 @@ export function ReceiptPrint({ order }: ReceiptPrintProps) {
 
   const items = order.items;
 
-  if (!order.shop_name) {
-    return <div>Datos de tienda incompletos</div>;
-  }
+  // Use shop_name or fallback to generic name
+  const shopName = order.shop_name || "Cooperativa 5 de Julio";
 
   return (
-    <div className="max-w-max">
-      <div className="p-4">
+    <div className="fixed inset-0 z-50 bg-white">
+      {/* Print-only receipt */}
+      <div className="receipt-print p-4">
         {/* Shop name/logo at top */}
         <div className="text-center mb-6">
-          <h1 className="text-xl font-bold">{order.shop_name}</h1>
+          <h1 className="text-xl font-bold">{shopName}</h1>
           {order.shop_address && <p className="text-sm text-muted-foreground">{order.shop_address}</p>}
           {order.shop_phone && <p className="text-xs text-muted-foreground">{order.shop_phone}</p>}
         </div>
@@ -110,6 +117,36 @@ export function ReceiptPrint({ order }: ReceiptPrintProps) {
           {order.shop_phone && <div>{order.shop_phone}</div>}
         </div>
       </div>
+
+      {/* Close button (visible on screen, hidden on print) */}
+      <button
+        onClick={onClose}
+        className="no-print fixed top-4 right-4 bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700 z-50"
+      >
+        Cerrar vista previa
+      </button>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .receipt-print,
+          .receipt-print * {
+            visibility: visible;
+          }
+          .receipt-print {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 80mm;
+            font-family: monospace;
+          }
+          .no-print {
+            display: none !important;
+          }
+        }
+      `}} />
     </div>
   );
 }
