@@ -199,22 +199,26 @@ export function OrdersTable({
       </AlertDialog>
 
       {/* Receipt Print */}
-      {orderToPrint && (
-        <ReceiptPrint
-          order={{
-            order_number: orderToPrint.order_number,
-            date: orderToPrint.date || orderToPrint.created_at,
-            items: orderToPrint.items || [],
-            total: orderToPrint.total,
-            tax: orderToPrint.tax || orderToPrint.total * 0.16,
-            subtotal: orderToPrint.subtotal || orderToPrint.total / 1.16,
-            total_paid: orderToPrint.total_paid || orderToPrint.total,
-            payment_method: orderToPrint.payment_method || "Efectivo",
-            customer_name: orderToPrint.customer_name || orderToPrint.customer_email,
-          }}
-          onClose={() => setOrderToPrint(null)}
-        />
-      )}
+      {orderToPrint && (() => {
+        const subtotal = orderToPrint.subtotal || orderToPrint.total / 1.16;
+        const tax = orderToPrint.tax || orderToPrint.total - subtotal;
+        return (
+          <ReceiptPrint
+            order={{
+              order_number: orderToPrint.order_number,
+              date: orderToPrint.date || orderToPrint.created_at,
+              items: orderToPrint.items || [],
+              total: orderToPrint.total,
+              tax: tax,
+              subtotal: subtotal,
+              total_paid: orderToPrint.total_paid || orderToPrint.total,
+              payment_method: orderToPrint.payment_method || "Efectivo",
+              customer_name: orderToPrint.customer_name || orderToPrint.customer_email,
+            }}
+            onClose={() => setOrderToPrint(null)}
+          />
+        );
+      })()}
     </>
   );
 }

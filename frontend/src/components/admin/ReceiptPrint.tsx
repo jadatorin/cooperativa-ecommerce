@@ -44,6 +44,10 @@ export function ReceiptPrint({ order, onClose }: ReceiptPrintProps) {
     day: "numeric",
   });
 
+  const formatMoney = (amount: number) => {
+    return `$${Number(amount).toFixed(2)}`;
+  };
+
   const paymentMethod = order.payment_method || "No especificado";
 
   // Truncate long product names for thermal printer (80mm width constraint)
@@ -59,7 +63,7 @@ export function ReceiptPrint({ order, onClose }: ReceiptPrintProps) {
   const shopName = order.shop_name || "Cooperativa 5 de Julio";
 
   return (
-    <div className="fixed inset-0 z-50 bg-white">
+    <div className="fixed inset-0 z-50 bg-white receipt-print-container">
       {/* Print-only receipt */}
       <div className="receipt-print p-4">
         {/* Shop name/logo at top */}
@@ -93,8 +97,8 @@ export function ReceiptPrint({ order, onClose }: ReceiptPrintProps) {
                     {truncateProductName(item.product_name)}
                   </TableCell>
                   <TableCell className="text-center">{item.quantity}</TableCell>
-                  <TableCell className="text-right">${item.unit_price}</TableCell>
-                  <TableCell className="text-right">${item.subtotal}</TableCell>
+                  <TableCell className="text-right">{formatMoney(item.unit_price)}</TableCell>
+                  <TableCell className="text-right">{formatMoney(item.subtotal)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -105,9 +109,9 @@ export function ReceiptPrint({ order, onClose }: ReceiptPrintProps) {
 
         {/* Totals */}
         <div className="mt-8 pt-8 border-t text-right">
-          <p>Subtotal: ${order.subtotal}</p>
-          <p>IVA (16%): ${order.tax}</p>
-          <p>Total: ${order.total}</p>
+          <p>Subtotal: {formatMoney(order.subtotal)}</p>
+          <p>IVA (16%): {formatMoney(order.tax)}</p>
+          <p>Total: {formatMoney(order.total)}</p>
           <p>Método: {paymentMethod}</p>
         </div>
 
@@ -128,19 +132,20 @@ export function ReceiptPrint({ order, onClose }: ReceiptPrintProps) {
 
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
-          body * {
-            visibility: hidden;
+          body > *:not(.receipt-print-container) {
+            display: none !important;
           }
-          .receipt-print,
-          .receipt-print * {
-            visibility: visible;
+          .receipt-print-container {
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 80mm !important;
+            background: white !important;
+            z-index: 999999 !important;
           }
           .receipt-print {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 80mm;
-            font-family: monospace;
+            font-family: monospace !important;
+            font-size: 12pt !important;
           }
           .no-print {
             display: none !important;
