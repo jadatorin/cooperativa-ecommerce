@@ -8,14 +8,14 @@ import { LoginForm } from "@/components/auth/login-form";
 import { useAuth } from "@/contexts/auth-context";
 
 export default function LoginPage() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.push("/");
+      router.push(user?.role === "admin" ? "/admin" : "/");
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, user, router]);
 
   if (isLoading) return null;
 
