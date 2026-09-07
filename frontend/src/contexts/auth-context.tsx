@@ -92,21 +92,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await apiLogin(email, password);
+
+    // Set user FIRST from login response so role is available immediately
+    setUser({
+      id: res.user.id,
+      email: res.user.email,
+      full_name: res.user.fullName,
+      role: res.user.role ?? "customer",
+    });
+
+    // Then set token — this triggers isAuthenticated = true and redirect
     localStorage.setItem(TOKEN_KEY, res.token);
     setToken(res.token);
 
-    // Fetch full profile
+    // Fetch full profile in background (non-blocking)
     try {
       const profile = await fetchProfile(res.token);
       setUser(profile);
     } catch {
-      // Fallback to login response data
-      setUser({
-        id: res.user.id,
-        email: res.user.email,
-        full_name: res.user.fullName,
-        role: res.user.role ?? "customer",
-      });
+      // Login response data already set above, keep it
     }
   }, []);
 
@@ -119,19 +123,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = useCallback(
     async (data: { fullName: string; email: string; phone: string; password: string }) => {
       const res = await apiRegister(data);
+
+      // Set user FIRST from register response
+      setUser({
+        id: res.user.id,
+        email: res.user.email,
+        full_name: res.user.fullName,
+        role: res.user.role ?? "customer",
+      });
+
+      // Then set token
       localStorage.setItem(TOKEN_KEY, res.token);
       setToken(res.token);
 
+      // Fetch full profile in background
       try {
         const profile = await fetchProfile(res.token);
         setUser(profile);
       } catch {
-        setUser({
-          id: res.user.id,
-          email: res.user.email,
-          full_name: res.user.fullName,
-          role: res.user.role ?? "customer",
-        });
+        // Register response data already set above
       }
     },
     []
