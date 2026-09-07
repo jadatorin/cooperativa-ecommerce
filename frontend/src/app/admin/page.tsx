@@ -2,8 +2,10 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Button } from "@/components/ui/button";
 import { DashboardStatsCard } from "@/components/admin/DashboardStatsCard";
 import { UsersTable } from "@/components/admin/UsersTable";
 import { OrdersTable } from "@/components/admin/OrdersTable";
@@ -28,12 +30,6 @@ export default function AdminDashboard() {
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  useEffect(() => {
-    if (mounted && (!isAuthenticated || (user && user.role !== "admin"))) {
-      router.push("/login");
-    }
-  }, [mounted, isAuthenticated, user, router]);
 
   // ── Data state ───────────────────────────────────────────────────────
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -185,6 +181,30 @@ export default function AdminDashboard() {
     return (
       <div className="min-h-80 flex items-center justify-center">
         <LoadingSpinner text="Cargando..." />
+      </div>
+    );
+  }
+
+  // ── Not authenticated ───────────────────────────────────────────────
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-80 flex flex-col items-center justify-center gap-4">
+        <p className="text-muted-foreground">Debes iniciar sesión para acceder al panel de administración.</p>
+        <Link href="/login">
+          <Button>Iniciar sesión</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  // ── Not admin ───────────────────────────────────────────────────────
+  if (user && user.role !== "admin") {
+    return (
+      <div className="min-h-80 flex flex-col items-center justify-center gap-4">
+        <p className="text-muted-foreground">No tienes permisos para acceder al panel de administración.</p>
+        <Link href="/">
+          <Button>Volver al inicio</Button>
+        </Link>
       </div>
     );
   }
