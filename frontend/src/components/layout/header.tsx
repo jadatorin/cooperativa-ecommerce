@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, Menu, X, User, LogOut, Package, Heart } from "lucide-react";
+import { ShoppingCart, Menu, X, User, LogOut, Package, Heart, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useRef, useEffect } from "react";
 import { useCart } from "@/contexts/cart-context";
@@ -47,6 +47,15 @@ export function Header() {
           >
             Productos
           </Link>
+          {isAuthenticated && user?.role === "admin" && (
+            <Link
+              href="/admin"
+              className="text-sm font-medium hover:text-primary flex items-center gap-1.5 text-muted-foreground hover:text-primary"
+            >
+              <Shield className="h-3.5 w-3.5" />
+              Admin
+            </Link>
+          )}
         </nav>
 
         {/* Search */}
@@ -164,6 +173,16 @@ export function Header() {
               >
                 Productos
               </Link>
+              {isAuthenticated && user?.role === "admin" && (
+                <Link
+                  href="/admin"
+                  className="text-sm font-medium hover:text-primary py-2 flex items-center gap-1.5"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Shield className="h-3.5 w-3.5" />
+                  Admin
+                </Link>
+              )}
               {isAuthenticated ? (
                 <>
                   <Link
