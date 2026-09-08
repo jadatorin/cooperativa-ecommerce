@@ -1,5 +1,12 @@
 import { Product, Category, DollarRate, PaginatedResponse, Cart, CartItem, AuthResponse, UserProfile, Pagination } from "@/types";
-import { AdminUser, AdminOrder, DashboardStats, AdminUsersResponse, AdminOrdersResponse } from "@/types/admin";
+import {
+  AdminUser,
+  AdminOrder,
+  DashboardStats,
+  AdminUsersResponse,
+  AdminOrdersResponse,
+  PaymentReportResponse,
+} from "@/types/admin";
 
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000").replace(/\/+$/, "");
 
@@ -294,4 +301,79 @@ export async function removeFavorite(token: string, productId: string): Promise<
     method: "DELETE",
     headers: authHeaders(token),
   });
+}
+
+// ── Payment Reports ───────────────────────────────────────────────────────
+
+export interface PaymentReportParams {
+  page?: number;
+  limit?: number;
+  payment_method?: string;
+  payment_status?: string;
+  start_date?: string;
+  end_date?: string;
+}
+
+export async function getUserPaymentReport(
+  token: string,
+  params?: PaymentReportParams
+): Promise<PaymentReportResponse> {
+  const searchParams = new URLSearchParams();
+  if (params?.page && params.page > 1) searchParams.set("page", String(params.page));
+  if (params?.limit && params.limit > 20) searchParams.set("limit", String(params.limit));
+  if (params?.payment_method) searchParams.set("payment_method", params.payment_method);
+  if (params?.payment_status) searchParams.set("payment_status", params.payment_status);
+  if (params?.start_date) searchParams.set("start_date", params.start_date);
+  if (params?.end_date) searchParams.set("end_date", params.end_date);
+
+  const qs = searchParams.toString();
+  return fetchAPI<PaymentReportResponse>(`/orders/payments/report${qs ? `?${qs}` : ""}`, {
+    headers: authHeaders(token),
+  });
+}
+
+export async function getAdminPaymentReport(
+  token: string,
+  params?: PaymentReportParams & { order_status?: string; search?: string }
+): Promise<PaymentReportResponse> {
+  const searchParams = new URLSearchParams();
+  if (params?.page && params.page > 1) searchParams.set("page", String(params.page));
+  if (params?.limit && params.limit > 20) searchParams.set("limit", String(params.limit));
+  if (params?.payment_method) searchParams.set("payment_method", params.payment_method);
+  if (params?.payment_status) searchParams.set("payment_status", params.payment_status);
+  if (params?.start_date) searchParams.set("start_date", params.start_date);
+  if (params?.end_date) searchParams.set("end_date", params.end_date);
+  if (params?.order_status) searchParams.set("order_status", params.order_status);
+  if (params?.search) searchParams.set("search", params.search);
+
+  const qs = searchParams.toString();
+  return fetchAPI<PaymentReportResponse>(`/admin/payments/report${qs ? `?${qs}` : ""}`, {
+    headers: authHeaders(token),
+  });
+}
+
+export async function exportAdminPaymentReport(
+  token: string,
+  params?: PaymentReportParams & { order_status?: string; search?: string }
+): Promise<Blob> {
+  const searchParams = new URLSearchParams();
+  if (params?.payment_method) searchParams.set("payment_method", params.payment_method);
+  if (params?.payment_status) searchParams.set("payment_status", params.payment_status);
+  if (params?.start_date) searchParams.set("start_date", params.start_date);
+  if (params?.end_date) searchParams.set("end_date", params.end_date);
+  if (params?.order_status) searchParams.set("order_status", params.order_status);
+  if (params?.search) searchParams.set("search", params.search);
+  searchParams.set("format", "csv");
+
+  const qs = searchParams.toString();
+  const res = await fetch(`${API_BASE}/api/admin/payments/export${qs ? `?${qs}` : ""}`, {
+    headers: authHeaders(token),
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error(`Export error: ${res.status} ${res.statusText}`);
+  }
+
+  return res.blob();
 }

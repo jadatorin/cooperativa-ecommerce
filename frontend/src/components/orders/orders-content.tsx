@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Package, ChevronDown, ChevronUp, ShoppingBag } from "lucide-react";
+import { Package, ChevronDown, ChevronUp, ShoppingBag, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -104,7 +104,15 @@ export function OrdersContent() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Mis órdenes</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Mis órdenes</h1>
+        <Link href="/orders/payments">
+          <Button variant="outline" size="sm">
+            <CreditCard className="h-4 w-4 mr-2" />
+            Mis pagos
+          </Button>
+        </Link>
+      </div>
 
       {loading ? (
         <p className="text-muted-foreground">Cargando órdenes...</p>

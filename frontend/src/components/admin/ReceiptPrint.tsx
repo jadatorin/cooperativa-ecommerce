@@ -87,6 +87,9 @@ function ReceiptContent({ order, onClose }: { order: ReceiptPrintProps["order"];
       style.remove();
       window.removeEventListener("afterprint", handleAfterPrint);
       onClose?.();
+      // Set focus back to the close button for accessibility
+      const closeBtn = document.querySelector('.no-print .bg-gray-800') as HTMLButtonElement;
+      closeBtn?.focus();
     };
     window.addEventListener("afterprint", handleAfterPrint);
   };

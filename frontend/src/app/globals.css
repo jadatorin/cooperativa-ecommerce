@@ -122,3 +122,78 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Print-friendly styles for PDF export */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt;
+  }
+
+  /* Hide navigation, buttons, and non-essential UI */
+  nav, header, footer, .no-print, button, [data-radix-collection-item] {
+    display: none !important;
+  }
+
+  /* Show print-only elements */
+  .print-only {
+    display: block !important;
+  }
+
+  /* Table styling for print */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: avoid;
+  }
+
+  th, td {
+    border: 1px solid #ccc !important;
+    padding: 8px !important;
+    text-align: left !important;
+  }
+
+  th {
+    background-color: #f0f0f0 !important;
+    font-weight: bold !important;
+  }
+
+  /* Card styling for print */
+  .card {
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+  }
+
+  /* Summary section for print */
+  .summary-print {
+    margin-bottom: 20px !important;
+    padding: 10px !important;
+    border-bottom: 2px solid #000 !important;
+  }
+
+  /* Page title for print */
+  .print-title {
+    display: block !important;
+    font-size: 18pt !important;
+    font-weight: bold !important;
+    margin-bottom: 10px !important;
+    text-align: center !important;
+  }
+
+  /* Date range for print */
+  .print-date-range {
+    display: block !important;
+    font-size: 10pt !important;
+    text-align: center !important;
+    margin-bottom: 20px !important;
+    color: #666 !important;
+  }
+
+  /* Remove shadows and rounded corners */
+  * {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+}

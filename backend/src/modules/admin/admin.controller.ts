@@ -16,6 +16,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
+import { PaymentExportQuery } from './dto/payment-export-query.dto';
 
 @ApiTags('Admin')
 @Controller('admin')
@@ -81,5 +82,44 @@ export class AdminController {
     @Body() statusDto: UpdateOrderStatusDto,
   ) {
     return this.adminService.updateOrderStatus(orderId, statusDto.status);
+  }
+
+  @Get('payments/report')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Get payment report with filters (admin only)' })
+  @ApiResponse({ status: 200, description: 'Payment report with summary statistics' })
+  async getPaymentReport(
+    @Request() req: any,
+    @Query() filter: PaymentExportQuery,
+  ) {
+    return this.adminService.getPaymentReport(filter);
+  }
+
+  @Get('payments/export')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Export payment report (admin only)' })
+  @ApiResponse({ status: 200, description: 'Payment report export' })
+  async exportPaymentReport(
+    @Request() req: any,
+    @Query() filter: PaymentExportQuery,
+  ) {
+    return this.adminService.exportPaymentReport(filter);
+  }
+
+  @Put('orders/:id/payment')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Update order payment status (admin only)' })
+  @ApiResponse({ status: 200, description: 'Payment status updated' })
+  async updateOrderPaymentStatus(
+    @Request() req: any,
+    @Param('id') orderId: string,
+    @Body() body: { payment_status: string; payment_method?: string; payment_reference?: string },
+  ) {
+    return this.adminService.updateOrderPaymentStatus(
+      orderId,
+      body.payment_status,
+      body.payment_method,
+      body.payment_reference,
+    );
   }
 }
