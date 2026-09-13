@@ -121,7 +121,7 @@ export function CartContent() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-8 sm:py-16">
         <LoadingSpinner size="md" text="Cargando carrito..." />
       </div>
     );
@@ -129,11 +129,11 @@ export function CartContent() {
 
   if (!isAuthenticated) {
     return (
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-8 sm:py-16">
         <div className="max-w-md mx-auto text-center">
-          <ShoppingBag className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-          <h1 className="text-2xl font-bold mb-2">Inicia sesión para ver tu carrito</h1>
-          <p className="text-muted-foreground mb-6">
+          <ShoppingBag className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-3 sm:mb-4 text-muted-foreground" />
+          <h1 className="text-xl sm:text-2xl font-bold mb-2">Inicia sesión para ver tu carrito</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
             Necesitas una cuenta para agregar productos
           </p>
           <LoginForm />
@@ -144,7 +144,7 @@ export function CartContent() {
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-8 sm:py-16">
         <ErrorMessage
           message={error}
           onRetry={() => window.location.reload()}
@@ -155,10 +155,10 @@ export function CartContent() {
 
   if (items.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <ShoppingBag className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-        <h1 className="text-2xl font-bold mb-2">Tu carrito está vacío</h1>
-        <p className="text-muted-foreground mb-6">
+      <div className="container mx-auto px-4 py-8 sm:py-16 text-center">
+        <ShoppingBag className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-3 sm:mb-4 text-muted-foreground" />
+        <h1 className="text-xl sm:text-2xl font-bold mb-2">Tu carrito está vacío</h1>
+        <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
           Agrega productos para comenzar tu compra
         </p>
         <Link href="/products">
@@ -169,63 +169,74 @@ export function CartContent() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Carrito de compras</h1>
+    <div className="container mx-auto px-4 py-6 sm:py-8">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Carrito de compras</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-4">
+      {/* Mobile: Stack | Desktop: Side by side */}
+      <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 lg:gap-8">
+        {/* Items */}
+        <div className="lg:col-span-2 space-y-3 sm:space-y-4">
           {items.map((item) => (
             <Card key={item.id}>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-4">
-                  {item.product_image && (
-                    <img
-                      src={item.product_image}
-                      alt={item.product_name}
-                      className="h-16 w-16 rounded object-cover"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <h3 className="font-semibold">{item.product_name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {formatPrice(item.unit_price)} c/u
-                    </p>
+              <CardContent className="p-3 sm:p-4">
+                {/* Mobile: Compact layout */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  {/* Image + Name */}
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    {item.product_image && (
+                      <img
+                        src={item.product_image}
+                        alt={item.product_name}
+                        className="h-14 w-14 sm:h-16 sm:w-16 rounded object-cover flex-shrink-0"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm sm:text-base line-clamp-1">{item.product_name}</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        {formatPrice(item.unit_price)} c/u
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => updateQuantity(item, -1)}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    <span className="w-8 text-center font-medium">
-                      {item.quantity}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => updateQuantity(item, 1)}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  {/* Controls row */}
+                  <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
+                    {/* Quantity controls */}
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7 sm:h-8 sm:w-8"
+                        onClick={() => updateQuantity(item, -1)}
+                      >
+                        <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
+                      </Button>
+                      <span className="w-6 sm:w-8 text-center text-sm sm:font-medium">
+                        {item.quantity}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7 sm:h-8 sm:w-8"
+                        onClick={() => updateQuantity(item, 1)}
+                      >
+                        <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                      </Button>
+                    </div>
 
-                  <div className="text-right">
-                    <p className="font-semibold">
-                      {formatPrice(item.unit_price * item.quantity)}
-                    </p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive"
-                      onClick={() => removeItem(item)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {/* Price + Delete */}
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-sm sm:text-base">
+                        {formatPrice(item.unit_price * item.quantity)}
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 sm:h-8 sm:w-8 text-destructive"
+                        onClick={() => removeItem(item)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -233,22 +244,23 @@ export function CartContent() {
           ))}
         </div>
 
-        <div>
+        {/* Summary - sticky on desktop */}
+        <div className="lg:sticky lg:top-24 lg:self-start">
           <Card>
-            <CardHeader>
-              <CardTitle>Resumen</CardTitle>
+            <CardHeader className="pb-3 sm:pb-6">
+              <CardTitle className="text-base sm:text-lg">Resumen</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between">
+            <CardContent className="space-y-3 sm:space-y-4">
+              <div className="flex justify-between text-sm sm:text-base">
                 <span>Subtotal</span>
                 <span>{formatPrice(total)}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between text-sm sm:text-base">
                 <span>Envío</span>
                 <span className="text-muted-foreground">Calculado al final</span>
               </div>
-              <div className="border-t pt-4">
-                <div className="flex justify-between font-bold text-lg">
+              <div className="border-t pt-3 sm:pt-4">
+                <div className="flex justify-between font-bold text-base sm:text-lg">
                   <span>Total</span>
                   <span>{formatPrice(total)}</span>
                 </div>
@@ -256,12 +268,12 @@ export function CartContent() {
             </CardContent>
             <CardFooter className="flex flex-col gap-2">
               <Link href="/checkout" className="w-full">
-                <Button className="w-full" size="lg" disabled={items.length === 0}>
+                <Button className="w-full h-10 sm:h-11 text-sm sm:text-base" disabled={items.length === 0}>
                   Proceder al pago
                 </Button>
               </Link>
               <Link href="/products" className="w-full">
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full h-9 sm:h-10 text-sm sm:text-base">
                   Seguir comprando
                 </Button>
               </Link>

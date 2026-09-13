@@ -10,6 +10,8 @@ import { DashboardStatsCard } from "@/components/admin/DashboardStatsCard";
 import { UsersTable } from "@/components/admin/UsersTable";
 import { OrdersTable } from "@/components/admin/OrdersTable";
 import { useToast } from "@/components/ui/toast";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { useFetchWithRetry } from "@/hooks/useFetchWithRetry";
 import {
   fetchAdminUsers,
   fetchAdminOrders,
@@ -78,28 +80,28 @@ export default function AdminDashboard() {
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
 
   // ── Fetch: Dashboard ─────────────────────────────────────────────────
-  const loadDashboard = async () => {
-    if (!token) return;
-    dashboardAbortRef.current?.abort();
-    const controller = new AbortController();
-    dashboardAbortRef.current = controller;
-    setLoadingStates((s) => ({ ...s, dashboard: true }));
-    setErrors((s) => ({ ...s, dashboard: null }));
-    try {
-      const stats = await fetchAdminDashboard(token);
-      if (!controller.signal.aborted) {
-        setDashboardStats(stats);
-      }
-    } catch (err) {
-      if (!controller.signal.aborted) {
-        setErrors((s) => ({ ...s, dashboard: "Error al cargar las estadísticas del dashboard" }));
-      }
-    } finally {
-      if (!controller.signal.aborted) {
-        setLoadingStates((s) => ({ ...s, dashboard: false }));
-      }
+  const {
+    dashboard: dashboardData,
+    setDashboardData,
+  } = useFetchWithRetry<DashboardStats>(`/api/dashboard`, {
+    retry: 2,
+    delay: 1000,
+    onError: (err) =>
+      addToast(`Error al cargar dashboard: ${err.message}`, "error"),
+  });
+
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
+    users: 0,
+    products: 0,
+    orders: 0,
+    revenue: 0,
+  });
+
+  useEffect(() => {
+    if (dashboardData) {
+      setDashboardStats(dashboardData);
     }
-  };
+  }, [dashboardData]);
 
   // ── Fetch: Users ─────────────────────────────────────────────────────
   const loadUsers = async (page: number) => {
@@ -185,29 +187,7 @@ export default function AdminDashboard() {
     );
   }
 
-  // ── Not authenticated ───────────────────────────────────────────────
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-80 flex flex-col items-center justify-center gap-4">
-        <p className="text-muted-foreground">Debes iniciar sesión para acceder al panel de administración.</p>
-        <Link href="/login">
-          <Button>Iniciar sesión</Button>
-        </Link>
-      </div>
-    );
-  }
-
-  // ── Not admin ───────────────────────────────────────────────────────
-  if (user && user.role !== "admin") {
-    return (
-      <div className="min-h-80 flex flex-col items-center justify-center gap-4">
-        <p className="text-muted-foreground">No tienes permisos para acceder al panel de administración.</p>
-        <Link href="/">
-          <Button>Volver al inicio</Button>
-        </Link>
-      </div>
-    );
-  }
+  
 
   // ── Update user role ─────────────────────────────────────────────────
   const handleUpdateRole = async () => {
@@ -263,69 +243,81 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Panel de Administración</h1>
-        <p className="text-muted-foreground mt-1">Bienvenido, {user?.full_name || "Admin"}</p>
-        <button
-          onClick={() => logout()}
-          className="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-        >
-          Cerrar sesión
-        </button>
-      </div>
+    <ErrorBoundary
+      fallback={<div className="min-h-80 flex items-center justify-center">
+        <p className="text-muted-foreground">Error al cargar el panel de administración.</p>
+        <Button onClick={() => window.location.reload()} className="mt-2">Reintentar</Button>
+      </div>}
+      onError={(err) => {
+        console.error("AdminDashboard ErrorBoundary:", err);
+        addToast("Error inesperado en el panel de administración", "error");
+      }}
+      retry={loadDashboard}
+    >
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold">Panel de Administración</h1>
+          <p className="text-muted-foreground mt-1">Bienvenido, {user?.full_name || "Admin"}</p>
+          <button
+            onClick={() => logout()}
+            className="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+          >
+            Cerrar sesión
+          </button>
+        </div>
 
-      {/* Dashboard Stats */}
-      <DashboardStatsCard
+        {/* Dashboard Stats */}
+<DashboardStatsCard
         stats={dashboardStats}
-        loading={loadingStates.dashboard}
-        error={errors.dashboard}
+        loading={false}
+        error={dashboardStats === null && loadingStates.dashboard ? "Cargando..." : null}
         onRetry={loadDashboard}
-      />
+/>
 
-      {/* Users Management */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-4">Gestión de Usuarios</h2>
-        <UsersTable
-          users={users}
-          pagination={usersPagination}
-          currentPage={usersPage}
-          loading={loadingStates.users}
-          error={errors.users}
-          onUpdateRole={handleUsersUpdateRole}
-          onPageChange={setUsersPage}
-          onRetry={() => loadUsers(usersPage)}
-          roleDialogOpen={roleDialogOpen}
-          onRoleDialogOpenChange={setRoleDialogOpen}
-          roleToUpdate={roleToUpdate}
-          targetUserId={targetUserId}
-          isUpdating={isUpdating}
-          onConfirmRoleUpdate={handleUpdateRole}
-        />
-      </div>
+        {/* Users Management */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold mb-4">Gestión de Usuarios</h2>
+          <UsersTable
+            users={users}
+            pagination={usersPagination}
+            currentPage={usersPage}
+            loading={loadingStates.users}
+            error={errors.users}
+            onUpdateRole={handleUsersUpdateRole}
+            onPageChange={setUsersPage}
+            onRetry={() => loadUsers(usersPage)}
+            roleDialogOpen={roleDialogOpen}
+            onRoleDialogOpenChange={setRoleDialogOpen}
+            roleToUpdate={roleToUpdate}
+            targetUserId={targetUserId}
+            isUpdating={isUpdating}
+            onConfirmRoleUpdate={handleUpdateRole}
+          />
+        </div>
 
-      {/* Orders Management */}
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Gestión de Pedidos</h2>
-        <OrdersTable
-          orders={orders}
-          pagination={ordersPagination}
-          currentPage={ordersPage}
-          loading={loadingStates.orders}
-          error={errors.orders}
-          token={token!}
-          onUpdateStatus={handleOrdersUpdateStatus}
-          onPageChange={setOrdersPage}
-          onRetry={() => loadOrders(ordersPage)}
-          statusDialogOpen={statusDialogOpen}
-          onStatusDialogOpenChange={setStatusDialogOpen}
-          orderStatusToUpdate={orderStatusToUpdate}
-          targetOrderId={targetOrderId}
-          isUpdating={isUpdating}
-          onConfirmStatusUpdate={handleUpdateOrderStatus}
-        />
+        {/* Orders Management */}
+        <div>
+          <h2 className="text-2xl font-bold mb-4">Gestión de Pedidos</h2>
+          <OrdersTable
+            orders={orders}
+            pagination={ordersPagination}
+            currentPage={ordersPage}
+            loading={loadingStates.orders}
+            error={errors.orders}
+            token={token!}
+            onUpdateStatus={handleOrdersUpdateStatus}
+            onPageChange={setOrdersPage}
+            onRetry={() => loadOrders(ordersPage)}
+            statusDialogOpen={statusDialogOpen}
+            onStatusDialogOpenChange={setStatusDialogOpen}
+            orderStatusToUpdate={orderStatusToUpdate}
+            targetOrderId={targetOrderId}
+            isUpdating={isUpdating}
+            onConfirmStatusUpdate={handleUpdateOrderStatus}
+          />
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }

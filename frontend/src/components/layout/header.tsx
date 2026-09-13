@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, Menu, X, User, LogOut, Package, Heart, Shield } from "lucide-react";
+import { ShoppingCart, Menu, X, User, LogOut, Package, Heart, Shield, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useRef, useEffect } from "react";
 import { useCart } from "@/contexts/cart-context";
@@ -56,6 +56,24 @@ export function Header() {
               Admin
             </Link>
           )}
+          {isAuthenticated && user?.role === "admin" && (
+            <Link
+              href="/admin/payments"
+              className="text-sm font-medium hover:text-primary flex items-center gap-1.5 text-muted-foreground hover:text-primary"
+            >
+              <CreditCard className="h-3.5 w-3.5" />
+              Pagos
+            </Link>
+          )}
+          {isAuthenticated && user?.role !== "admin" && (
+            <Link
+              href="/dashboard/payments"
+              className="text-sm font-medium hover:text-primary flex items-center gap-1.5 text-muted-foreground hover:text-primary"
+            >
+              <CreditCard className="h-3.5 w-3.5" />
+              Mis pagos
+            </Link>
+          )}
         </nav>
 
         {/* Search */}
@@ -108,6 +126,26 @@ export function Header() {
                       <Heart className="h-4 w-4" />
                       Favoritos
                     </Link>
+                    {user?.role !== "admin" && (
+                      <Link
+                        href="/dashboard/payments"
+                        className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <CreditCard className="h-4 w-4" />
+                        Mis pagos
+                      </Link>
+                    )}
+                    {user?.role === "admin" && (
+                      <Link
+                        href="/admin/payments"
+                        className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <CreditCard className="h-4 w-4" />
+                        Pagos (Admin)
+                      </Link>
+                    )}
                     <button
                       className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent w-full text-left text-destructive"
                       onClick={() => {
@@ -183,6 +221,16 @@ export function Header() {
                   Admin
                 </Link>
               )}
+              {isAuthenticated && user?.role === "admin" && (
+                <Link
+                  href="/admin/payments"
+                  className="text-sm font-medium hover:text-primary py-2 flex items-center gap-1.5"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <CreditCard className="h-3.5 w-3.5" />
+                  Pagos
+                </Link>
+              )}
               {isAuthenticated ? (
                 <>
                   <Link
@@ -199,6 +247,16 @@ export function Header() {
                   >
                     Favoritos
                   </Link>
+                  {user?.role !== "admin" && (
+                    <Link
+                      href="/dashboard/payments"
+                      className="text-sm font-medium hover:text-primary py-2 flex items-center gap-1.5"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <CreditCard className="h-3.5 w-3.5" />
+                      Mis pagos
+                    </Link>
+                  )}
                   <button
                     className="text-sm font-medium text-destructive hover:text-destructive/80 py-2 text-left"
                     onClick={() => {

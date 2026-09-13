@@ -38,18 +38,18 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     product = await fetchProduct(id);
   } catch {
     return (
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-8 sm:py-16">
         <Link
           href="/products"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6"
+          className="inline-flex items-center gap-1 text-xs sm:text-sm text-muted-foreground hover:text-foreground mb-4 sm:mb-6"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           Volver a productos
         </Link>
-        <div className="flex flex-col items-center justify-center gap-4 py-16">
-          <AlertCircle className="h-16 w-16 text-destructive" />
-          <h1 className="text-2xl font-bold">Producto no encontrado</h1>
-          <p className="text-muted-foreground">
+        <div className="flex flex-col items-center justify-center gap-3 sm:gap-4 py-8 sm:py-16">
+          <AlertCircle className="h-12 w-12 sm:h-16 sm:w-16 text-destructive" />
+          <h1 className="text-xl sm:text-2xl font-bold">Producto no encontrado</h1>
+          <p className="text-sm sm:text-base text-muted-foreground text-center">
             El producto que buscas no existe o no está disponible.
           </p>
           <Link href="/products">
@@ -64,17 +64,17 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-6 sm:py-8">
       {/* Back link */}
       <Link
         href="/products"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6"
+        className="inline-flex items-center gap-1 text-xs sm:text-sm text-muted-foreground hover:text-foreground mb-4 sm:mb-6"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         Volver a productos
       </Link>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="flex flex-col md:grid md:grid-cols-2 gap-6 md:gap-8">
         {/* Image / Placeholder */}
         <div className="aspect-square rounded-xl bg-muted flex items-center justify-center">
           {product.image_url ? (
@@ -84,36 +84,36 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
               className="w-full h-full object-cover rounded-xl"
             />
           ) : (
-            <div className="flex flex-col items-center gap-3 text-muted-foreground">
-              <Package className="h-16 w-16" />
-              <span className="text-lg font-medium">{product.name}</span>
+            <div className="flex flex-col items-center gap-2 sm:gap-3 text-muted-foreground">
+              <Package className="h-12 w-12 sm:h-16 sm:w-16" />
+              <span className="text-base sm:text-lg font-medium">{product.name}</span>
             </div>
           )}
         </div>
 
         {/* Details */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           <div>
-            <h1 className="text-3xl font-bold">{product.name}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">{product.name}</h1>
             {product.category_slug && (
-              <Badge variant="secondary" className="mt-2">
+              <Badge variant="secondary" className="mt-2 text-[10px] sm:text-xs">
                 {product.category_slug}
               </Badge>
             )}
           </div>
 
-          <p className="text-4xl font-bold">{formatPrice(product.price)}</p>
+          <p className="text-2xl sm:text-4xl font-bold">{formatPrice(product.price)}</p>
 
           {product.description && (
-            <p className="text-muted-foreground">{product.description}</p>
+            <p className="text-sm sm:text-base text-muted-foreground">{product.description}</p>
           )}
 
           {/* Meta */}
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Detalles</CardTitle>
+            <CardHeader className="pb-2 sm:pb-3">
+              <CardTitle className="text-sm sm:text-base">Detalles</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-sm">
+            <CardContent className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Stock</span>
                 {product.quantity_stock > 0 ? (

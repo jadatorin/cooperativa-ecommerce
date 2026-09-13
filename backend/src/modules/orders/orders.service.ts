@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { CartService } from '../cart/cart.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { PaymentReportFilter } from './dto/payment-report-filter.dto';
 
 @Injectable()
 export class OrdersService {
@@ -126,5 +127,112 @@ export class OrdersService {
       ...order,
       items: formattedItems,
     };
+  }
+
+  async getPaymentReport(userId: string, filter: PaymentReportFilter) {
+    const supabase = this.supabaseService.getClient();
+    const { start_date, end_date, payment_method, payment_status, page = 1, limit = 20 } = filter;
+    const offset = (page - 1) * limit;
+
+    let query = supabase
+      .from('app_orders')
+      .select('*', { count: 'exact' })
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    // Apply filters
+    if (start_date) {
+      query = query.gte('created_at', start_date);
+    }
+    if (end_date) {
+      query = query.lte('created_at', end_date);
+    }
+    if (payment_method) {
+      query = query.eq('payment_method', payment_method);
+    }
+    if (payment_status) {
+      query = query.eq('payment_status', payment_status);
+    }
+
+    // Apply pagination
+    query = query.range(offset, offset + limit - 1);
+
+    const { data, error, count } = await query;
+
+    if (error) {
+      throw new Error(`Error fetching payment report: ${error.message}`);
+    }
+
+    // Calculate summary statistics
+    const { data: allOrders } = await supabase
+      .from('app_orders')
+      .select('total, subtotal, tax, payment_status, payment_method')
+      .eq('user_id', userId)
+      .gte('created_at', start_date || '1970-01-01')
+      .lte('created_at', end_date || new Date().toISOString());
+
+    const summary = {
+      total_orders: count ?? 0,
+      total_amount: (allOrders || []).reduce((sum, order) => sum + (order.total || 0), 0),
+      total_subtotal: (allOrders || []).reduce((sum, order) => sum + (order.subtotal || 0), 0),
+      total_tax: (allOrders || []).reduce((sum, order) => sum + (order.tax || 0), 0),
+      paid_count: (allOrders || []).filter(o => o.payment_status === 'paid').length,
+      paid_amount: (allOrders || []).filter(o => o.payment_status === 'paid').reduce((sum, o) => sum + (o.total || 0), 0),
+      pending_count: (allOrders || []).filter(o => o.payment_status === 'pending').length,
+      pending_amount: (allOrders || []).filter(o => o.payment_status === 'pending').reduce((sum, o) => sum + (o.total || 0), 0),
+    };
+
+    return {
+      payments: data,
+      summary,
+      pagination: {
+        page,
+        limit,
+        total: count ?? 0,
+        totalPages: Math.ceil((count ?? 0) / limit),
+      },
+    };
+  }
+
+  async updatePaymentStatus(orderId: string, userId: string, paymentStatus: string, paymentMethod?: string, paymentReference?: string) {
+    const supabase = this.supabaseService.getClient();
+
+    // Verify order belongs to user
+    const { data: order, error: fetchError } = await supabase
+      .from('app_orders')
+      .select('id')
+      .eq('id', orderId)
+      .eq('user_id', userId)
+      .single();
+
+    if (fetchError || !order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    const updateData: any = {
+      payment_status: paymentStatus,
+      payment_date: new Date().toISOString(),
+    };
+
+    if (paymentMethod) {
+      updateData.payment_method = paymentMethod;
+    }
+
+    if (paymentReference) {
+      updateData.payment_reference = paymentReference;
+    }
+
+    const { data, error } = await supabase
+      .from('app_orders')
+      .update(updateData)
+      .eq('id', orderId)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Error updating payment status: ${error.message}`);
+    }
+
+    return { message: 'Payment status updated successfully', order: data };
   }
 }
