@@ -98,7 +98,7 @@ export function CheckoutContent() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-8 sm:py-16">
         <LoadingSpinner size="md" text="Cargando resumen del pedido..." />
       </div>
     );
@@ -106,11 +106,11 @@ export function CheckoutContent() {
 
   if (!isAuthenticated) {
     return (
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-8 sm:py-16">
         <div className="max-w-md mx-auto text-center">
-          <ShoppingCart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-          <h1 className="text-2xl font-bold mb-2">Inicia sesión para continuar</h1>
-          <p className="text-muted-foreground mb-6">
+          <ShoppingCart className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-3 sm:mb-4 text-muted-foreground" />
+          <h1 className="text-xl sm:text-2xl font-bold mb-2">Inicia sesión para continuar</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
             Necesitas una cuenta para realizar un pedido
           </p>
           <LoginForm />
@@ -121,7 +121,7 @@ export function CheckoutContent() {
 
   if (error && items.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-8 sm:py-16">
         <ErrorMessage
           message={error}
           onRetry={() => window.location.reload()}
@@ -131,19 +131,19 @@ export function CheckoutContent() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Finalizar pedido</h1>
+    <div className="container mx-auto px-4 py-6 sm:py-8">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Finalizar pedido</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Order Items */}
-        <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-xl font-semibold mb-4">Productos</h2>
+        <div className="lg:col-span-2 space-y-3 sm:space-y-4">
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Productos</h2>
           {items.map((item) => (
             <Card key={item.id}>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-4">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center gap-3 sm:gap-4">
                   {item.product_image && (
-                    <div className="relative h-16 w-16 rounded overflow-hidden">
+                    <div className="relative h-12 w-12 sm:h-16 sm:w-16 rounded overflow-hidden flex-shrink-0">
                       <Image
                         src={item.product_image}
                         alt={item.product_name || "Producto"}
@@ -153,13 +153,13 @@ export function CheckoutContent() {
                       />
                     </div>
                   )}
-                  <div className="flex-1">
-                    <h3 className="font-semibold">{item.product_name}</h3>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-sm sm:text-base line-clamp-1">{item.product_name}</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       {formatPrice(item.unit_price)} c/u × {item.quantity}
                     </p>
                   </div>
-                  <p className="font-semibold">
+                  <p className="font-semibold text-sm sm:text-base flex-shrink-0">
                     {formatPrice(item.unit_price * item.quantity)}
                   </p>
                 </div>
@@ -169,39 +169,39 @@ export function CheckoutContent() {
 
           {/* Notes */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Notas del pedido</CardTitle>
+            <CardHeader className="pb-3 sm:pb-6">
+              <CardTitle className="text-base sm:text-lg">Notas del pedido</CardTitle>
             </CardHeader>
             <CardContent>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Instrucciones de entrega, dirección, referencias... (opcional)"
-                className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
+                className="w-full min-h-[80px] sm:min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
               />
             </CardContent>
           </Card>
         </div>
 
         {/* Order Summary */}
-        <div>
-          <Card className="sticky top-24">
-            <CardHeader>
-              <CardTitle>Resumen del pedido</CardTitle>
+        <div className="lg:sticky lg:top-24 lg:self-start">
+          <Card>
+            <CardHeader className="pb-3 sm:pb-6">
+              <CardTitle className="text-base sm:text-lg">Resumen del pedido</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between text-sm">
+            <CardContent className="space-y-3 sm:space-y-4">
+              <div className="flex justify-between text-sm sm:text-base">
                 <span className="text-muted-foreground">
                   {items.length} {items.length === 1 ? "producto" : "productos"}
                 </span>
                 <span>{formatPrice(total)}</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm sm:text-base">
                 <span className="text-muted-foreground">Envío</span>
                 <span className="text-muted-foreground">A definir</span>
               </div>
-              <div className="border-t pt-4">
-                <div className="flex justify-between font-bold text-lg">
+              <div className="border-t pt-3 sm:pt-4">
+                <div className="flex justify-between font-bold text-base sm:text-lg">
                   <span>Total</span>
                   <span>{formatPrice(total)}</span>
                 </div>
@@ -212,8 +212,7 @@ export function CheckoutContent() {
                 <ErrorMessage message={error} onRetry={handleSubmit} />
               )}
               <Button
-                className="w-full"
-                size="lg"
+                className="w-full h-10 sm:h-11 text-sm sm:text-base"
                 onClick={handleSubmit}
                 disabled={isSubmitting || items.length === 0}
               >
@@ -227,7 +226,7 @@ export function CheckoutContent() {
                 )}
               </Button>
               <Link href="/cart" className="w-full">
-                <Button variant="outline" className="w-full" disabled={isSubmitting}>
+                <Button variant="outline" className="w-full h-9 sm:h-10 text-sm sm:text-base" disabled={isSubmitting}>
                   Volver al carrito
                 </Button>
               </Link>

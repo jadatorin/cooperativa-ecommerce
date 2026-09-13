@@ -28,7 +28,7 @@ const EMPTY_FILTERS: PaymentFiltersState = {
 };
 
 const selectClass =
-  "flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm";
+  "flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
 
 export function PaymentFilters({
   filters,
@@ -51,13 +51,13 @@ export function PaymentFilters({
   };
 
   return (
-    <div className="flex flex-wrap items-end gap-3 mb-6 p-4 bg-muted/50 rounded-lg">
-      <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-muted-foreground">Método de pago</label>
+    <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-3 mb-4 sm:mb-6 p-3 sm:p-4 bg-muted/50 rounded-lg">
+      <div className="flex flex-col gap-1 flex-1 min-w-[140px] sm:min-w-[160px]">
+        <label className="text-[10px] sm:text-xs font-medium text-muted-foreground">Método de pago</label>
         <select
           value={local.payment_method}
           onChange={(e) => update({ payment_method: e.target.value })}
-          className={cn(selectClass, "w-[160px]")}
+          className={cn(selectClass, "w-full")}
         >
           <option value="">Todos</option>
           <option value="cash">Efectivo</option>
@@ -67,12 +67,12 @@ export function PaymentFilters({
         </select>
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-muted-foreground">Estado</label>
+      <div className="flex flex-col gap-1 flex-1 min-w-[140px] sm:min-w-[140px]">
+        <label className="text-[10px] sm:text-xs font-medium text-muted-foreground">Estado</label>
         <select
           value={local.status}
           onChange={(e) => update({ status: e.target.value })}
-          className={cn(selectClass, "w-[140px]")}
+          className={cn(selectClass, "w-full")}
         >
           <option value="">Todos</option>
           <option value="pending">Pendiente</option>
@@ -82,42 +82,44 @@ export function PaymentFilters({
         </select>
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-muted-foreground">Desde</label>
+      <div className="flex flex-col gap-1 flex-1 min-w-[140px] sm:min-w-[160px]">
+        <label className="text-[10px] sm:text-xs font-medium text-muted-foreground">Desde</label>
         <Input
           type="date"
           value={local.from}
           onChange={(e) => update({ from: e.target.value })}
-          className="w-[160px]"
+          className="w-full"
         />
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-muted-foreground">Hasta</label>
+      <div className="flex flex-col gap-1 flex-1 min-w-[140px] sm:min-w-[160px]">
+        <label className="text-[10px] sm:text-xs font-medium text-muted-foreground">Hasta</label>
         <Input
           type="date"
           value={local.to}
           onChange={(e) => update({ to: e.target.value })}
-          className="w-[160px]"
+          className="w-full"
         />
       </div>
 
-      <Button onClick={apply} size="sm">
-        Filtrar
-      </Button>
-      <Button onClick={reset} variant="outline" size="sm">
-        Limpiar
-      </Button>
-      {onExport && (
-        <Button onClick={onExport} variant="outline" size="sm" disabled={exporting}>
-          {exporting ? "Exportando..." : "Exportar CSV"}
+      <div className="flex gap-2 flex-wrap">
+        <Button onClick={apply} size="sm" className="h-9 text-xs sm:text-sm">
+          Filtrar
         </Button>
-      )}
-      {onExportPDF && (
-        <Button onClick={onExportPDF} variant="outline" size="sm">
-          Exportar PDF
+        <Button onClick={reset} variant="outline" size="sm" className="h-9 text-xs sm:text-sm">
+          Limpiar
         </Button>
-      )}
+        {onExport && (
+          <Button onClick={onExport} variant="outline" size="sm" className="h-9 text-xs sm:text-sm" disabled={exporting}>
+            {exporting ? "Exportando..." : "CSV"}
+          </Button>
+        )}
+        {onExportPDF && (
+          <Button onClick={onExportPDF} variant="outline" size="sm" className="h-9 text-xs sm:text-sm">
+            PDF
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

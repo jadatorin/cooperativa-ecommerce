@@ -56,24 +56,24 @@ export default function FavoritesPage() {
 
   if (isLoading || !isAuthenticated) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
+      <div className="container mx-auto px-4 py-8 sm:py-16 text-center">
         <p className="text-muted-foreground">Cargando...</p>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Mis favoritos</h1>
+    <div className="container mx-auto px-4 py-6 sm:py-8">
+      <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Mis favoritos</h1>
 
       {loading ? (
-        <p className="text-muted-foreground">Cargando favoritos...</p>
+        <p className="text-sm sm:text-base text-muted-foreground">Cargando favoritos...</p>
       ) : products.length === 0 ? (
         <Card>
-          <CardContent className="py-12 text-center">
-            <Heart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-lg font-medium mb-2">No tienes favoritos</p>
-            <p className="text-muted-foreground mb-4">
+          <CardContent className="py-8 sm:py-12 text-center">
+            <Heart className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-muted-foreground mb-3 sm:mb-4" />
+            <p className="text-base sm:text-lg font-medium mb-2">No tienes favoritos</p>
+            <p className="text-sm sm:text-base text-muted-foreground mb-4">
               Marca productos como favoritos para verlos aquí.
             </p>
             <Link href="/products">
@@ -85,7 +85,7 @@ export default function FavoritesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
           {products.map((product) => (
             <ProductCard
               key={product.id}

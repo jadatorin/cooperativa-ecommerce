@@ -31,7 +31,7 @@ function statusBadge(status: string) {
   const styles = STATUS_STYLES[status] || "";
   const label = STATUS_LABELS[status] || status;
   return (
-    <Badge variant="outline" className={styles}>
+    <Badge variant="outline" className={`text-[10px] sm:text-xs ${styles}`}>
       {label}
     </Badge>
   );
@@ -96,32 +96,33 @@ export function OrdersContent() {
 
   if (isLoading || !isAuthenticated) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
+      <div className="container mx-auto px-4 py-8 sm:py-16 text-center">
         <p className="text-muted-foreground">Cargando...</p>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Mis órdenes</h1>
+    <div className="container mx-auto px-4 py-6 sm:py-8">
+      {/* Mobile: Stack | Desktop: Side by side */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold">Mis órdenes</h1>
         <Link href="/orders/payments">
-          <Button variant="outline" size="sm">
-            <CreditCard className="h-4 w-4 mr-2" />
+          <Button variant="outline" size="sm" className="h-9 sm:h-10 text-xs sm:text-sm">
+            <CreditCard className="h-4 w-4 mr-1.5 sm:mr-2" />
             Mis pagos
           </Button>
         </Link>
       </div>
 
       {loading ? (
-        <p className="text-muted-foreground">Cargando órdenes...</p>
+        <p className="text-muted-foreground text-sm sm:text-base">Cargando órdenes...</p>
       ) : orders.length === 0 ? (
         <Card>
-          <CardContent className="py-12 text-center">
-            <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-lg font-medium mb-2">No tienes órdenes aún</p>
-            <p className="text-muted-foreground mb-4">
+          <CardContent className="py-8 sm:py-12 text-center">
+            <Package className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-muted-foreground mb-3 sm:mb-4" />
+            <p className="text-base sm:text-lg font-medium mb-2">No tienes órdenes aún</p>
+            <p className="text-sm sm:text-base text-muted-foreground mb-4">
               Cuando realices tu primera compra, aparecerá aquí.
             </p>
             <Link href="/products">
@@ -134,7 +135,7 @@ export function OrdersContent() {
         </Card>
       ) : (
         <>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {orders.map((order) => {
               const isExpanded = expandedId === order.id;
               return (
@@ -143,25 +144,25 @@ export function OrdersContent() {
                     className="w-full text-left"
                     onClick={() => toggleExpand(order.id)}
                   >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <CardTitle className="text-base">
+                    <CardHeader className="pb-2 sm:pb-3">
+                      <div className="flex items-start sm:items-center justify-between gap-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3">
+                          <CardTitle className="text-sm sm:text-base">
                             Orden #{order.order_number || order.id.slice(0, 8)}
                           </CardTitle>
                           {statusBadge(order.status)}
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 sm:gap-4">
                           <div className="text-right">
-                            <p className="font-bold">{formatPrice(order.total)}</p>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="font-bold text-sm sm:text-base">{formatPrice(order.total)}</p>
+                            <p className="text-[10px] sm:text-xs text-muted-foreground">
                               {formatDate(order.created_at)}
                             </p>
                           </div>
                           {isExpanded ? (
-                            <ChevronUp className="h-5 w-5 text-muted-foreground" />
+                            <ChevronUp className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
                           ) : (
-                            <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                            <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
                           )}
                         </div>
                       </div>
@@ -169,39 +170,39 @@ export function OrdersContent() {
                   </button>
 
                   {isExpanded && (
-                    <CardContent>
-                      <div className="border-t pt-4">
-                        <h3 className="font-medium mb-3">Detalle de la orden</h3>
+                    <CardContent className="pt-0">
+                      <div className="border-t pt-3 sm:pt-4">
+                        <h3 className="font-medium text-sm sm:text-base mb-2 sm:mb-3">Detalle de la orden</h3>
                         {loadingDetails ? (
-                          <p className="text-sm text-muted-foreground">Cargando detalles...</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground">Cargando detalles...</p>
                         ) : expandedOrder?.items && expandedOrder.items.length > 0 ? (
-                          <div className="space-y-2">
+                          <div className="space-y-1.5 sm:space-y-2">
                             {expandedOrder.items.map((item) => (
                               <div
                                 key={item.id}
-                                className="flex justify-between text-sm py-2 border-b last:border-0"
+                                className="flex justify-between text-xs sm:text-sm py-1.5 sm:py-2 border-b last:border-0"
                               >
-                                <div>
-                                  <span className="font-medium">
+                                <div className="min-w-0 flex-1">
+                                  <span className="font-medium line-clamp-1">
                                     {item.product_name || `Producto ${item.product_id.slice(0, 8)}`}
                                   </span>
-                                  <span className="text-muted-foreground ml-2">
+                                  <span className="text-muted-foreground ml-1 sm:ml-2">
                                     × {item.quantity}
                                   </span>
                                 </div>
-                                <span>{formatPrice(item.subtotal)}</span>
+                                <span className="flex-shrink-0 ml-2">{formatPrice(item.subtotal)}</span>
                               </div>
                             ))}
                           </div>
                         ) : (
-                          <p className="text-sm text-muted-foreground">No hay detalles disponibles</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground">No hay detalles disponibles</p>
                         )}
                         {expandedOrder?.notes && (
-                          <div className="mt-3 p-3 bg-muted rounded-lg text-sm">
+                          <div className="mt-2 sm:mt-3 p-2 sm:p-3 bg-muted rounded-lg text-xs sm:text-sm">
                             <span className="font-medium">Notas:</span> {expandedOrder.notes}
                           </div>
                         )}
-                        <div className="mt-3 flex justify-end font-bold text-lg">
+                        <div className="mt-2 sm:mt-3 flex justify-end font-bold text-base sm:text-lg">
                           Total: {formatPrice(order.total)}
                         </div>
                       </div>
@@ -216,16 +217,18 @@ export function OrdersContent() {
             <div className="flex justify-center gap-2 mt-6">
               <Button
                 variant="outline"
+                size="sm"
                 disabled={page <= 1}
                 onClick={() => setPage(page - 1)}
               >
                 Anterior
               </Button>
-              <span className="flex items-center px-4 text-sm text-muted-foreground">
-                Página {page} de {totalPages}
+              <span className="flex items-center px-3 sm:px-4 text-xs sm:text-sm text-muted-foreground">
+                {page} / {totalPages}
               </span>
               <Button
                 variant="outline"
+                size="sm"
                 disabled={page >= totalPages}
                 onClick={() => setPage(page + 1)}
               >
