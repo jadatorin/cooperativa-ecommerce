@@ -90,10 +90,10 @@ export function ProductCard({ product, onAddedToCart, onFavoriteToggle }: Produc
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
       <Link href={`/products/${product.id}`}>
-        {/* Mobile: Horizontal layout | Desktop: Vertical layout */}
-        <div className="flex flex-col sm:flex-row">
+        {/* Always vertical layout */}
+        <div className="flex flex-col">
           {/* Image Container */}
-          <div className="relative aspect-square sm:aspect-square w-full sm:w-32 md:w-40 flex-shrink-0 bg-muted">
+          <div className="relative aspect-square bg-muted">
             {product.image_url ? (
               <Image
                 src={product.image_url}
@@ -128,37 +128,37 @@ export function ProductCard({ product, onAddedToCart, onFavoriteToggle }: Produc
           </div>
 
           {/* Content */}
-          <div className="flex flex-col flex-1 min-w-0 p-3 sm:p-4">
-            <CardHeader className="p-0 pb-2">
-              <CardTitle className="text-sm sm:text-base md:text-lg line-clamp-1">{product.name}</CardTitle>
+          <div className="flex flex-col flex-1 min-w-0 p-2 sm:p-3 md:p-4">
+            <CardHeader className="p-0 pb-1.5 sm:pb-2">
+              <CardTitle className="text-xs sm:text-sm md:text-base line-clamp-1">{product.name}</CardTitle>
               {product.description && (
-                <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 hidden sm:block">
+                <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground line-clamp-2 hidden sm:block">
                   {product.description}
                 </p>
               )}
             </CardHeader>
 
-            <CardContent className="p-0 pb-3 flex-1">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-lg sm:text-xl md:text-2xl font-bold">{formatPrice(product.price)}</span>
+            <CardContent className="p-0 pb-2 sm:pb-3 flex-1">
+              <div className="flex items-center justify-between gap-1 sm:gap-2">
+                <span className="text-sm sm:text-base md:text-xl font-bold">{formatPrice(product.price)}</span>
                 {product.quantity_stock > 0 ? (
-                  <Badge variant="outline" className="text-green-600 text-[10px] sm:text-xs">
+                  <Badge variant="outline" className="text-green-600 text-[8px] sm:text-[10px] md:text-xs">
                     Disponible
                   </Badge>
                 ) : (
-                  <Badge variant="destructive" className="text-[10px] sm:text-xs">Agotado</Badge>
+                  <Badge variant="destructive" className="text-[8px] sm:text-[10px] md:text-xs">Agotado</Badge>
                 )}
               </div>
             </CardContent>
 
             <CardFooter className="p-0">
               <Button
-                className="w-full h-9 sm:h-10 text-xs sm:text-sm"
+                className="w-full h-8 sm:h-9 md:h-10 text-[10px] sm:text-xs md:text-sm"
                 disabled={product.quantity_stock === 0 || adding}
                 onClick={handleAddToCart}
               >
-                <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-                {adding ? "Agregando..." : "Agregar al carrito"}
+                <ShoppingCart className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 mr-1 sm:mr-1.5 md:mr-2" />
+                {adding ? "Agregando..." : "Agregar"}
               </Button>
             </CardFooter>
           </div>
