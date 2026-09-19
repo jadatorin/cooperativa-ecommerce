@@ -138,17 +138,15 @@ export function ProductCard({ product, onAddedToCart, onFavoriteToggle }: Produc
           )}
         </CardHeader>
 
-        <CardContent className="pb-2" aria-describedby="price-stock-{product.id}">
+        <CardContent className="pb-2">
           <div className="flex items-center justify-between">
             <span className="text-2xl font-bold">{formatPrice(product.price)}</span>
             {product.quantity_stock > 0 ? (
-              <Badge variant="outline" className="text-green-600" id="price-stock-{product.id}">
+              <Badge variant="outline" className="text-green-600">
                 Disponible
               </Badge>
             ) : (
-              <Badge variant="destructive" id="price-stock-{product.id}">
-                Agotado
-              </Badge>
+              <Badge variant="destructive">Agotado</Badge>
             )}
           </div>
         </CardContent>
