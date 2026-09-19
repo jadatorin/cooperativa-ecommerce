@@ -108,12 +108,13 @@ export function ProductCard({ product, onAddedToCart, onFavoriteToggle }: Produc
               {product.name}
             </div>
           )}
-          <button
-            onClick={toggleFavorite}
-            disabled={togglingFav}
-            className="absolute top-2 right-2 z-10 h-8 w-8 flex items-center justify-center rounded-full bg-background/80 backdrop-blur hover:bg-background transition-colors"
-            aria-label={isFavorite ? "Eliminar de favoritos" : "Agregar a favoritos"}
-          >
+<button
+              onClick={toggleFavorite}
+              disabled={togglingFav}
+              className="absolute top-2 right-2 z-10 h-8 w-8 flex items-center justify-center rounded-full bg-background/80 backdrop-blur hover:bg-background transition-colors"
+              aria-label={isFavorite ? "Eliminar de favoritos" : "Agregar a favoritos"}
+              aria-pressed={isFavorite}
+            >
             <Heart
               className={cn(
                 "h-4 w-4 transition-colors",
@@ -137,15 +138,17 @@ export function ProductCard({ product, onAddedToCart, onFavoriteToggle }: Produc
           )}
         </CardHeader>
 
-        <CardContent className="pb-2">
+        <CardContent className="pb-2" aria-describedby="price-stock-{product.id}">
           <div className="flex items-center justify-between">
             <span className="text-2xl font-bold">{formatPrice(product.price)}</span>
             {product.quantity_stock > 0 ? (
-              <Badge variant="outline" className="text-green-600">
+              <Badge variant="outline" className="text-green-600" id="price-stock-{product.id}">
                 Disponible
               </Badge>
             ) : (
-              <Badge variant="destructive">Agotado</Badge>
+              <Badge variant="destructive" id="price-stock-{product.id}">
+                Agotado
+              </Badge>
             )}
           </div>
         </CardContent>
