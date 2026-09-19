@@ -17,6 +17,10 @@ export default function FavoritesPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  // Paginación state para favorites
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -31,21 +35,24 @@ export default function FavoritesPage() {
       const favs = await fetchFavorites(token);
       if (favs.length === 0) {
         setProducts([]);
+        setTotalPages(1);
         return;
       }
-      // Optimized: fetch only needed products instead of limit: 1000
-      const allProducts = await fetchProducts({ limit: 50 });
+      // Paginated fetch instead of limit: 1000
+      const res = await fetchProducts({ limit, page });
       const favProductIds = new Set(favs.map((f: Favorite) => f.product_id));
-      const filtered = allProducts.products.filter((p: Product) =>
+      const filtered = res.products.filter((p: Product) =>
         favProductIds.has(p.id)
       );
       setProducts(filtered);
+      setTotalPages(res.pagination.totalPages);
     } catch {
       setProducts([]);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, page, limit]);
 
   useEffect(() => {
     loadFavorites();
@@ -87,6 +94,19 @@ export default function FavoritesPage() {
         </Card>
       ) : (
         <ProductGrid products={products} />
+      )}
+
+      {/* Load More for favorites */}
+      {page < totalPages && (
+        <div className="my-6 text-center">
+          <Button
+            onClick={() => setPage((prev) => prev + 1)}
+            disabled={page >= totalPages}
+            className="w-auto mx-auto"
+          >
+            Cargar más favoritos
+          </Button>
+        </div>
       )}
     </div>
   );

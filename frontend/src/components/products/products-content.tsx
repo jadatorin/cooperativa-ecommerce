@@ -6,6 +6,8 @@ import { ProductCard } from "@/components/products/product-card";
 import { fetchProducts, fetchCategories } from "@/lib/api";
 import { Product, Category } from "@/types";
 import { ErrorMessage } from "@/components/ui/error-message";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 export function ProductsContent() {
   const searchParams = useSearchParams();
@@ -17,23 +19,27 @@ export function ProductsContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Paginación state
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(50);
+  const [totalPages, setTotalPages] = useState(1);
+
   const load = async () => {
     setLoading(true);
     setError(null);
     try {
-      const [productsRes, categoriesRes] = await Promise.all([
-        fetchProducts({
-          category: activeCategory || undefined,
-          search: searchQuery || undefined,
-          limit: 50,
-        }),
-        fetchCategories(),
-      ]);
-      setProducts(productsRes.products);
-      setCategories(categoriesRes);
+      const res = await fetchProducts({
+        category: activeCategory || undefined,
+        search: searchQuery || undefined,
+        limit,
+        page,
+      });
+      setProducts(productsRes => [...productsRes, ...res.products]);
+      setTotalPages(res.pagination.totalPages);
+      setLoading(false);
     } catch {
       setProducts([]);
-      setCategories([]);
+      setTotalPages(1);
       setError("No se pudieron cargar los productos");
     } finally {
       setLoading(false);
@@ -42,7 +48,7 @@ export function ProductsContent() {
 
   useEffect(() => {
     load();
-  }, [activeCategory, searchQuery]);
+  }, [activeCategory, searchQuery, page, limit]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -81,10 +87,7 @@ export function ProductsContent() {
       {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-48 sm:h-64 md:h-80 rounded-xl bg-muted animate-pulse"
-            />
+            <Skeleton key={i} width="w-48" height="h-48" rounds={true} />
           ))}
         </div>
       ) : error ? (
@@ -101,6 +104,19 @@ export function ProductsContent() {
             ? "No hay productos en esta categoría."
             : "No se pudieron cargar los productos."}
         </p>
+      )}
+
+      {/* Load More Button */}
+      {page < totalPages && (
+        <div className="my-8 text-center">
+          <Button
+            onClick={() => setPage((prev) => prev + 1)}
+            disabled={page >= totalPages}
+            className="w-auto mx-auto"
+          >
+            Cargar más
+          </Button>
+        </div>
       )}
     </div>
   );
