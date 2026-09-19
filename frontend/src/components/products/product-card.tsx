@@ -97,7 +97,11 @@ export function ProductCard({ product, onAddedToCart, onFavoriteToggle }: Produc
               alt={product.name}
               fill
               className="object-cover"
-              sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+              sizes="(max-width: 640px) 48vw, (max-width: 1024px) 32vw, 24vw"
+              placeholder="blur"
+              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iNjAiIHZpZXdCb3glPSIwIDAgMzAgNjAiIHBvaW50cz0oNDAwLjUwMiwgNDAwLjUwMiwgc2Vuc2l0aXZlPlR5cGUgYXN0aW88L3N2Zz4="
+              loading="lazy"
+              decoding="async"
             />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground text-sm text-center p-2">
