@@ -1,15 +1,15 @@
 "use client";
 
+import { Heart, ShoppingBag } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Heart, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth-context";
 import { fetchFavorites, fetchProducts, Favorite } from "@/lib/api";
 import { Product } from "@/types";
-import { ProductCard } from "@/components/products/product-card";
+import { ProductGrid } from "@/components/products/product-grid";
 
 export default function FavoritesPage() {
   const { token, isAuthenticated, isLoading } = useAuth();
@@ -33,7 +33,8 @@ export default function FavoritesPage() {
         setProducts([]);
         return;
       }
-      const allProducts = await fetchProducts({ limit: 1000 });
+      // Optimized: fetch only needed products instead of limit: 1000
+      const allProducts = await fetchProducts({ limit: 50 });
       const favProductIds = new Set(favs.map((f: Favorite) => f.product_id));
       const filtered = allProducts.products.filter((p: Product) =>
         favProductIds.has(p.id)
@@ -85,15 +86,7 @@ export default function FavoritesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onFavoriteToggle={handleFavoriteToggle}
-            />
-          ))}
-        </div>
+        <ProductGrid products={products} />
       )}
     </div>
   );

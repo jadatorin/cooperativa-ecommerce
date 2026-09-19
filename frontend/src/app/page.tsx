@@ -61,11 +61,7 @@ export default async function HomePage() {
       <section>
         <h2 className="text-2xl font-bold mb-6">Productos</h2>
         {products.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <ProductGrid products={products} />
         ) : (
           <p className="text-muted-foreground">
             No se pudieron cargar los productos. Verifica que el backend esté
