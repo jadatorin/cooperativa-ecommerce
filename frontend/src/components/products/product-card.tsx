@@ -145,21 +145,14 @@ export function ProductCard({ product, onAddedToCart, onFavoriteToggle }: Produc
           </div>
 
           {/* Price & Stock */}
-          <div className="flex items-end justify-between">
-            <div className="space-y-0.5">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Precio</p>
-              <p className="text-xl font-bold text-primary">
-                {formatPrice(product.price)}
-              </p>
-            </div>
+          <div className="flex items-baseline gap-2">
+            <p className="text-xl font-bold text-primary">
+              {formatPrice(product.price)}
+            </p>
             {product.quantity_stock > 0 ? (
-              <Badge variant="outline" className="text-emerald-600 border-emerald-200 bg-emerald-50">
-                ✓ Disponible
-              </Badge>
+              <span className="text-xs text-emerald-600 font-medium">✓ Disponible</span>
             ) : (
-              <Badge variant="destructive" className="bg-red-100 text-red-700 border-red-200">
-                Agotado
-              </Badge>
+              <span className="text-xs text-red-600 font-medium">Agotado</span>
             )}
           </div>
         </div>
@@ -181,7 +174,7 @@ export function ProductCard({ product, onAddedToCart, onFavoriteToggle }: Produc
                 Agregando...
               </span>
             ) : (
-              "Agregar al carrito"
+              "Agregar"
             )}
           </Button>
         </div>
