@@ -62,18 +62,16 @@ export default async function HomePage() {
       {categories.length > 0 && (
         <section className="mb-8 sm:mb-12">
           <h2 className="text-2xl font-bold mb-6">Categorías</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
             {categories.map((cat) => (
-              <a
+              <Link
                 key={cat.slug}
                 href={`/products?category=${cat.slug}`}
-                className="flex flex-col items-center p-4 rounded-lg border bg-card hover:shadow-md transition-shadow"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border bg-background hover:bg-primary hover:text-primary-foreground transition-all duration-200 shadow-sm hover:shadow-md"
               >
-                <span className="text-3xl mb-2">
-                  {categoryEmojis[cat.slug] ?? "📦"}
-                </span>
-                <span className="text-sm font-medium text-center">{cat.name}</span>
-              </a>
+                <span className="text-xl">{categoryEmojis[cat.slug] ?? "📦"}</span>
+                <span className="font-medium">{cat.name}</span>
+              </Link>
             ))}
           </div>
         </section>
