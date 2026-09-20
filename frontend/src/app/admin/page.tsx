@@ -90,13 +90,6 @@ export default function AdminDashboard() {
       addToast(`Error al cargar dashboard: ${err.message}`, "error"),
   });
 
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
-    users: 0,
-    products: 0,
-    orders: 0,
-    revenue: 0,
-  });
-
   useEffect(() => {
     if (dashboardData) {
       setDashboardStats(dashboardData);
