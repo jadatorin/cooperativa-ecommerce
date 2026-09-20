@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { ProductCard } from "@/components/products/product-card";
+import { ProductGrid } from "@/components/products/product-grid";
 import { fetchProducts, fetchCategories } from "@/lib/api";
 
 export default async function HomePage() {

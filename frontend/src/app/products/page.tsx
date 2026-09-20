@@ -1,6 +1,5 @@
 import { Suspense } from "react";
-import { ProductGrid } from "@/components/products/product-grid";
-import { fetchProducts, fetchCategories } from "@/lib/api";
+import { ProductsContent } from "@/components/products/products-content";
 
 // ISR: Revalidate every 5 minutes (300 seconds)
 export const revalidate = 300;

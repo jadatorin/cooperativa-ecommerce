@@ -1,6 +1,7 @@
 "use client";
 
 import { ProductCard } from "./product-card";
+import { Product } from "@/types";
 
 /**
  * ProductGrid - Componente reusable para mostrar productos en diseño responsivo.

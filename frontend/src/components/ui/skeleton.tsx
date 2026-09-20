@@ -32,7 +32,8 @@ export function Skeleton({
 
   return (
     <div
-      className={cn(baseClass, widthClass, heightClass, roundsClass, className)}
+      className={cn(baseClasses, widthClass, heightClass, roundsClass, className)}
+      data-testid="skeleton"
     />
   );
 }
