@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Instagram, Facebook, MessageCircle } from "lucide-react";
+import { Globe, MessageCircle, Mail } from "lucide-react";
 
 export function Footer() {
   return (
@@ -28,10 +28,10 @@ export function Footer() {
                 href="https://instagram.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="h-10 w-10 rounded-full bg-gray-800 hover:bg-pink-600 flex items-center justify-center transition-colors"
+                className="h-10 w-10 rounded-full bg-gray-800 hover:bg-gradient-to-br hover:from-purple-500 hover:via-pink-500 hover:to-orange-400 flex items-center justify-center transition-all"
                 aria-label="Instagram"
               >
-                <Instagram className="h-5 w-5" />
+                <Globe className="h-5 w-5" />
               </a>
               <a
                 href="https://facebook.com"
@@ -40,7 +40,7 @@ export function Footer() {
                 className="h-10 w-10 rounded-full bg-gray-800 hover:bg-blue-600 flex items-center justify-center transition-colors"
                 aria-label="Facebook"
               >
-                <Facebook className="h-5 w-5" />
+                <Globe className="h-5 w-5" />
               </a>
               <a
                 href="https://wa.me/584121234567"
