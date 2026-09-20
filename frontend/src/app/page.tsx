@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { ProductGrid } from "@/components/products/product-grid";
 import { fetchProducts, fetchCategories } from "@/lib/api";
 
@@ -29,11 +31,16 @@ export default async function HomePage() {
   return (
     <div className="container mx-auto px-4 py-6 sm:py-8">
       {/* Hero Section */}
-      <section className="text-center py-8 sm:py-12 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg mb-8 sm:mb-12">
-        <h1 className="text-4xl font-bold mb-4">Bienvenido a Cooperativa</h1>
-        <p className="text-2xl text-muted-foreground max-w-2xl mx-auto">
+      <section className="text-center py-10 sm:py-16 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg mb-8 sm:mb-12">
+        <h1 className="text-4xl sm:text-5xl font-bold mb-4">Bienvenido a Cooperativa</h1>
+        <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
           Productos de calidad a precios justos para ti y tu familia
         </p>
+        <Link href="/products">
+          <Button size="lg" className="text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all">
+            Ver Productos →
+          </Button>
+        </Link>
       </section>
 
       {/* Categories */}
