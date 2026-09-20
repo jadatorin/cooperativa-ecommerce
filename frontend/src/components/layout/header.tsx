@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { ShoppingCart, Menu, X, User, LogOut, Package, Heart, Shield, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useRef, useEffect } from "react";
@@ -33,7 +34,14 @@ export function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-xl font-bold">Cooperativa</span>
+          <Image
+            src="/images/logo_coop5deJulio.png"
+            alt="Cooperativa 5 de Julio"
+            width={40}
+            height={40}
+            className="rounded-full"
+          />
+          <span className="text-lg font-bold hidden sm:inline">Cooperativa 5 de Julio</span>
         </Link>
 
         {/* Desktop Navigation */}
