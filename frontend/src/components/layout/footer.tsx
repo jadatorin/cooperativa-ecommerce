@@ -1,31 +1,84 @@
 import Link from "next/link";
+import Image from "next/image";
+import { Instagram, Facebook, MessageCircle } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t bg-muted/50">
-      <div className="container mx-auto px-4 py-6 sm:py-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
+    <footer className="bg-gray-900 text-gray-100">
+      <div className="container mx-auto px-4 py-10 sm:py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           {/* Brand */}
-          <div className="col-span-2 md:col-span-1 space-y-2 sm:space-y-4">
-            <h3 className="text-base sm:text-lg font-semibold">Cooperativa</h3>
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              Tu tienda de confianza para productos de calidad a precios justos.
+          <div className="col-span-1 sm:col-span-2 md:col-span-1 space-y-4">
+            <Link href="/" className="flex items-center gap-3">
+              <Image
+                src="/images/logo_coop5deJulio.png"
+                alt="Cooperativa 5 de Julio"
+                width={48}
+                height={48}
+                className="rounded-full"
+              />
+              <span className="text-lg font-bold">Cooperativa 5 de Julio</span>
+            </Link>
+            <p className="text-sm text-gray-400">
+              56 años Construyendo Comunidad.
             </p>
+            {/* Social Media */}
+            <div className="flex gap-3">
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-10 w-10 rounded-full bg-gray-800 hover:bg-pink-600 flex items-center justify-center transition-colors"
+                aria-label="Instagram"
+              >
+                <Instagram className="h-5 w-5" />
+              </a>
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-10 w-10 rounded-full bg-gray-800 hover:bg-blue-600 flex items-center justify-center transition-colors"
+                aria-label="Facebook"
+              >
+                <Facebook className="h-5 w-5" />
+              </a>
+              <a
+                href="https://wa.me/584121234567"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-10 w-10 rounded-full bg-gray-800 hover:bg-green-500 flex items-center justify-center transition-colors"
+                aria-label="WhatsApp"
+              >
+                <MessageCircle className="h-5 w-5" />
+              </a>
+            </div>
           </div>
 
-          {/* Links */}
-          <div className="space-y-2 sm:space-y-4">
-            <h4 className="text-xs sm:text-sm font-semibold">Enlaces</h4>
-            <nav className="flex flex-col gap-1.5 sm:gap-2">
+          {/* Tienda */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-semibold uppercase tracking-wider">Tienda</h4>
+            <nav className="flex flex-col gap-2">
               <Link
                 href="/products"
-                className="text-xs sm:text-sm text-muted-foreground hover:text-primary"
+                className="text-sm text-gray-400 hover:text-white transition-colors"
               >
                 Productos
               </Link>
               <Link
+                href="/favorites"
+                className="text-sm text-gray-400 hover:text-white transition-colors"
+              >
+                Favoritos
+              </Link>
+              <Link
+                href="/orders"
+                className="text-sm text-gray-400 hover:text-white transition-colors"
+              >
+                Mis órdenes
+              </Link>
+              <Link
                 href="/cart"
-                className="text-xs sm:text-sm text-muted-foreground hover:text-primary"
+                className="text-sm text-gray-400 hover:text-white transition-colors"
               >
                 Carrito
               </Link>
@@ -33,26 +86,37 @@ export function Footer() {
           </div>
 
           {/* Contact */}
-          <div className="space-y-2 sm:space-y-4">
-            <h4 className="text-xs sm:text-sm font-semibold">Contacto</h4>
-            <div className="text-xs sm:text-sm text-muted-foreground space-y-0.5 sm:space-y-1">
-              <p>Email: info@cooperativa.com</p>
-              <p>Tel: +58 412 1234567</p>
+          <div className="space-y-4">
+            <h4 className="text-sm font-semibold uppercase tracking-wider">Contacto</h4>
+            <div className="text-sm text-gray-400 space-y-2">
+              <p>info@cooperativa.com</p>
+              <p>+58 412 1234567</p>
+              <p>Caracas, Venezuela</p>
             </div>
           </div>
 
           {/* Hours */}
-          <div className="space-y-2 sm:space-y-4">
-            <h4 className="text-xs sm:text-sm font-semibold">Horario</h4>
-            <div className="text-xs sm:text-sm text-muted-foreground space-y-0.5 sm:space-y-1">
+          <div className="space-y-4">
+            <h4 className="text-sm font-semibold uppercase tracking-wider">Horario</h4>
+            <div className="text-sm text-gray-400 space-y-2">
               <p>Lun - Vie: 8:00 AM - 6:00 PM</p>
               <p>Sáb: 9:00 AM - 4:00 PM</p>
+              <p>Dom: Cerrado</p>
             </div>
           </div>
         </div>
 
-        <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t text-center text-xs sm:text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Cooperativa. Todos los derechos reservados.
+        {/* Bottom */}
+        <div className="mt-10 pt-6 border-t border-gray-800 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500">
+          <p>&copy; {new Date().getFullYear()} Cooperativa 5 de Julio R.L. Todos los derechos reservados.</p>
+          <div className="flex gap-4">
+            <Link href="/terms" className="hover:text-white transition-colors">
+              Términos
+            </Link>
+            <Link href="/privacy" className="hover:text-white transition-colors">
+              Privacidad
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
